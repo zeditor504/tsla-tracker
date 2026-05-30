@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLA Live Tracker</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Premium Minimalist Aesthetic */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: #000000; /* True Black */
+            font-family: 'Inter Tight', sans-serif;
+            color: #FFFFFF;
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            color: #8E8E93; /* Premium Subdued Gray */
+            font-size: 1.1rem;
+        }
+
+        /* Pill Navigation Bar */
+        .toggle-container {
+            display: flex;
+            gap: 5px;
+            background-color: #1C1C1E; 
+            padding: 4px;
+            border-radius: 100px; 
+            margin-bottom: 25px;
+        }
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: #8E8E93;
+            font-family: 'Inter Tight', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-btn:hover {
+            color: #FFFFFF;
+        }
+        .toggle-btn.active {
+            background-color: #3A3A3C;
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Chart Frame */
+        .chart-wrapper { 
+            width: 85vw; 
+            height: 65vh; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <h1>Tesla, Inc.</h1>
+        <p>Live Market Tracking</p>
+    </div>
+
+    <div class="toggle-container">
+        <button class="toggle-btn" onclick="updateChart('1D', '5', this)">24H</button>
+        <button class="toggle-btn" onclick="updateChart('5D', '15', this)">Week</button>
+        <button class="toggle-btn" onclick="updateChart('1M', '60', this)">Month</button>
+        <button class="toggle-btn active" onclick="updateChart('YTD', 'D', this)">YTD</button>
+        <button class="toggle-btn" onclick="updateChart('ALL', 'W', this)">Max</button>
+    </div>
+
+    <div class="chart-wrapper">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div id="tradingview_tsla" style="height:100%;width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+          
+          <script type="text/javascript">
+          function updateChart(rangeValue, intervalValue, clickedButton) {
+              // Highlight the selected button
+              if (clickedButton) {
+                  let buttons = document.querySelectorAll('.toggle-btn');
+                  buttons.forEach(btn => btn.classList.remove('active'));
+                  clickedButton.classList.add('active');
+              }
+
+              // Reset the chart container
+              document.getElementById('tradingview_tsla').innerHTML = '';
+
+              // Generate the new TradingView widget configured like Robinhood
+              new TradingView.widget({
+                  "autosize": true,
+                  "symbol": "NASDAQ:TSLA",
+                  "range": rangeValue,       
+                  "interval": intervalValue, 
+                  "timezone": "Etc/UTC",
+                  "theme": "dark",
+                  "style": "3", /* Minimalist Area Line Chart */
+                  "locale": "en",
+                  "enable_publishing": false,
+                  "allow_symbol_change": false, /* Locked to TSLA */
+                  "hide_top_toolbar": true, 
+                  "hide_legend": true, 
+                  "container_id": "tradingview_tsla"
+              });
+          }
+
+          // Initialize the chart on Year-To-Date default
+          updateChart('YTD', 'D', null);
+          </script>
+        </div>
+    </div>
+</body>
+</html>
