@@ -10,11 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* Premium Minimalist Aesthetic */
         body { 
             margin: 0; 
             padding: 0; 
-            background-color: #000000; /* True Black */
+            background-color: #000000; 
             font-family: 'Inter Tight', sans-serif;
             color: #FFFFFF;
             height: 100vh; 
@@ -36,11 +35,10 @@
         }
         .header p {
             margin: 5px 0 0 0;
-            color: #8E8E93; /* Premium Subdued Gray */
+            color: #8E8E93; 
             font-size: 1.1rem;
         }
 
-        /* Pill Navigation Bar */
         .toggle-container {
             display: flex;
             gap: 5px;
@@ -70,7 +68,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* Chart Frame */
         .chart-wrapper { 
             width: 85vw; 
             height: 65vh; 
@@ -83,8 +80,8 @@
 <body>
     
     <div class="header">
-        <h1>Tesla, Inc.</h1>
-        <p>Live Market Tracking</p>
+        <h1>TSLA</h1>
+        <p>Live Market Tracking & Volume</p>
     </div>
 
     <div class="toggle-container">
@@ -102,17 +99,14 @@
           
           <script type="text/javascript">
           function updateChart(rangeValue, intervalValue, clickedButton) {
-              // Highlight the selected button
               if (clickedButton) {
                   let buttons = document.querySelectorAll('.toggle-btn');
                   buttons.forEach(btn => btn.classList.remove('active'));
                   clickedButton.classList.add('active');
               }
 
-              // Reset the chart container
               document.getElementById('tradingview_tsla').innerHTML = '';
 
-              // Generate the new TradingView widget configured like Robinhood
               new TradingView.widget({
                   "autosize": true,
                   "symbol": "NASDAQ:TSLA",
@@ -120,17 +114,20 @@
                   "interval": intervalValue, 
                   "timezone": "Etc/UTC",
                   "theme": "dark",
-                  "style": "3", /* Minimalist Area Line Chart */
+                  "style": "3", 
                   "locale": "en",
                   "enable_publishing": false,
-                  "allow_symbol_change": false, /* Locked to TSLA */
+                  "allow_symbol_change": false, 
                   "hide_top_toolbar": true, 
                   "hide_legend": true, 
-                  "container_id": "tradingview_tsla"
+                  "container_id": "tradingview_tsla",
+                  /* NEW: Adds the native volume bars directly underneath the line */
+                  "studies": [
+                      "Volume@tv-basicstudies"
+                  ]
               });
           }
 
-          // Initialize the chart on Year-To-Date default
           updateChart('YTD', 'D', null);
           </script>
         </div>
