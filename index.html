@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Live Tracker</title>
+    <title>Live Market Terminal</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,146 +11,132 @@
     
     <style>
         body { 
-            margin: 0; 
-            padding: 0; 
-            background-color: #000000; 
-            font-family: 'Inter Tight', sans-serif;
-            color: #FFFFFF;
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center;
+            margin: 0; padding: 0; background-color: #000000; 
+            font-family: 'Inter Tight', sans-serif; color: #FFFFFF;
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
-        .header p {
-            margin: 5px 0 0 0;
-            color: #8E8E93; 
-            font-size: 1.1rem;
-        }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 2.5rem; font-weight: 600; letter-spacing: -0.5px; }
+        .header p { margin: 5px 0 0 0; color: #8E8E93; font-size: 1.1rem; }
 
+        /* Sleek, swipeable carousels for the buttons */
         .toggle-container {
-            display: flex;
-            gap: 5px;
-            background-color: #1C1C1E; 
-            padding: 4px;
-            border-radius: 100px; 
-            margin-bottom: 25px;
+            display: flex; gap: 5px; background-color: #1C1C1E; 
+            padding: 4px; border-radius: 100px; margin-bottom: 12px;
+            width: 85vw; overflow-x: auto; white-space: nowrap;
+            /* Hides the ugly scrollbar but keeps swipe functionality on mobile */
+            -ms-overflow-style: none; scrollbar-width: none;  
         }
+        .toggle-container::-webkit-scrollbar { display: none; }
+        
         .toggle-btn {
-            background: transparent;
-            border: none;
-            color: #8E8E93;
-            font-family: 'Inter Tight', sans-serif;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 8px 16px;
-            border-radius: 100px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: transparent; border: none; color: #8E8E93;
+            font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 0.9rem;
+            padding: 8px 16px; border-radius: 100px; cursor: pointer; 
+            transition: all 0.2s ease; flex-shrink: 0; /* Prevents squishing */
         }
-        .toggle-btn:hover {
-            color: #FFFFFF;
-        }
+        .toggle-btn:hover { color: #FFFFFF; }
         .toggle-btn.active {
-            background-color: #3A3A3C;
-            color: #FFFFFF;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            background-color: #3A3A3C; color: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* --- NEW: Legend Styles --- */
         .legend-container {
-            width: 85vw; /* Matches chart width for perfect alignment */
-            display: flex;
-            gap: 20px;
-            margin-bottom: 12px;
-            justify-content: flex-start;
+            width: 85vw; display: flex; gap: 20px; margin-bottom: 12px; justify-content: flex-start;
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .color-square {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px; /* Slightly rounded edges for a modern look */
-        }
-        .legend-text {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: #FFFFFF; /* Custom white text */
-        }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-square { width: 12px; height: 12px; border-radius: 3px; }
+        .legend-text { font-size: 0.9rem; font-weight: 400; color: #FFFFFF; }
 
         .chart-wrapper { 
-            width: 85vw; 
-            height: 65vh; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
+            width: 85vw; height: 55vh; border-radius: 20px; 
+            overflow: hidden; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
         }
     </style>
 </head>
 <body>
     
     <div class="header">
-        <h1>TSLA</h1>
+        <h1 id="stock-title">TSLA</h1>
         <p>Live Market Tracking & Volume</p>
     </div>
 
     <div class="toggle-container">
-        <button class="toggle-btn" onclick="updateChart('1D', '5', this)">24H</button>
-        <button class="toggle-btn" onclick="updateChart('5D', '15', this)">Week</button>
-        <button class="toggle-btn" onclick="updateChart('1M', '60', this)">Month</button>
-        <button class="toggle-btn active" onclick="updateChart('YTD', 'D', this)">YTD</button>
-        <button class="toggle-btn" onclick="updateChart('ALL', 'W', this)">Max</button>
+        <button class="toggle-btn symbol-btn active" onclick="setSymbol('NASDAQ:TSLA', 'TSLA', this)">TSLA</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:NVDA', 'NVDA', this)">NVDA</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:AAPL', 'AAPL', this)">AAPL</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:MSFT', 'MSFT', this)">MSFT</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:AMZN', 'AMZN', this)">AMZN</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:GOOGL', 'GOOGL', this)">GOOGL</button>
+        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:META', 'META', this)">META</button>
+    </div>
+
+    <div class="toggle-container">
+        <button class="toggle-btn time-btn" onclick="setTime('1D', '1', this)">1m</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1D', '2', this)">2m</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1D', '3', this)">3m</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1D', '5', this)">5m</button>
+        <button class="toggle-btn time-btn" onclick="setTime('5D', '15', this)">15m</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1M', '60', this)">1H</button>
+        <button class="toggle-btn time-btn" onclick="setTime('3M', '240', this)">4H</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1D', '5', this)">24H</button>
+        <button class="toggle-btn time-btn" onclick="setTime('5D', '15', this)">Week</button>
+        <button class="toggle-btn time-btn" onclick="setTime('1M', '60', this)">Month</button>
+        <button class="toggle-btn time-btn active" onclick="setTime('YTD', 'D', this)">YTD</button>
+        <button class="toggle-btn time-btn" onclick="setTime('ALL', 'W', this)">Max</button>
     </div>
 
     <div class="legend-container">
-        <div class="legend-item">
-            <div class="color-square" style="background-color: #2863fc;"></div>
-            <span class="legend-text">Price Trend</span>
-        </div>
-        <div class="legend-item">
-            <div class="color-square" style="background-color: #30998b;"></div>
-            <span class="legend-text">Demand (Buy Volume)</span>
-        </div>
-        <div class="legend-item">
-            <div class="color-square" style="background-color: #e95448;"></div>
-            <span class="legend-text">Supply (Sell Volume)</span>
-        </div>
+        <div class="legend-item"><div class="color-square" style="background-color: #2863fc;"></div><span class="legend-text">Price Trend</span></div>
+        <div class="legend-item"><div class="color-square" style="background-color: #30998b;"></div><span class="legend-text">Demand</span></div>
+        <div class="legend-item"><div class="color-square" style="background-color: #e95448;"></div><span class="legend-text">Supply</span></div>
     </div>
 
     <div class="chart-wrapper">
         <div class="tradingview-widget-container" style="height:100%;width:100%">
-          <div id="tradingview_tsla" style="height:100%;width:100%"></div>
+          <div id="tradingview_chart" style="height:100%;width:100%"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
           
           <script type="text/javascript">
-          function updateChart(rangeValue, intervalValue, clickedButton) {
+          
+          // State Variables: Remembers the current selection!
+          let currentSymbol = "NASDAQ:TSLA";
+          let currentRange = "YTD";
+          let currentInterval = "D";
+
+          // Triggers when a stock is clicked
+          function setSymbol(symbolCode, symbolName, clickedButton) {
               if (clickedButton) {
-                  let buttons = document.querySelectorAll('.toggle-btn');
+                  let buttons = document.querySelectorAll('.symbol-btn');
                   buttons.forEach(btn => btn.classList.remove('active'));
                   clickedButton.classList.add('active');
               }
+              currentSymbol = symbolCode;
+              document.getElementById('stock-title').innerText = symbolName; 
+              renderChart();
+          }
 
-              document.getElementById('tradingview_tsla').innerHTML = '';
+          // Triggers when a time is clicked
+          function setTime(rangeValue, intervalValue, clickedButton) {
+              if (clickedButton) {
+                  let buttons = document.querySelectorAll('.time-btn');
+                  buttons.forEach(btn => btn.classList.remove('active'));
+                  clickedButton.classList.add('active');
+              }
+              currentRange = rangeValue;
+              currentInterval = intervalValue;
+              renderChart();
+          }
 
+          // Destroys the old chart and draws the new one
+          function renderChart() {
+              document.getElementById('tradingview_chart').innerHTML = '';
               new TradingView.widget({
                   "autosize": true,
-                  "symbol": "NASDAQ:TSLA",
-                  "range": rangeValue,       
-                  "interval": intervalValue, 
+                  "symbol": currentSymbol,   
+                  "range": currentRange,     
+                  "interval": currentInterval, 
                   "timezone": "Etc/UTC",
                   "theme": "dark",
                   "style": "3", 
@@ -159,14 +145,14 @@
                   "allow_symbol_change": false, 
                   "hide_top_toolbar": true, 
                   "hide_legend": true, 
-                  "container_id": "tradingview_tsla",
-                  "studies": [
-                      "Volume@tv-basicstudies"
-                  ]
+                  "container_id": "tradingview_chart",
+                  "studies": ["Volume@tv-basicstudies"]
               });
           }
 
-          updateChart('YTD', 'D', null);
+          // Boot up the first chart
+          renderChart();
+          
           </script>
         </div>
     </div>
