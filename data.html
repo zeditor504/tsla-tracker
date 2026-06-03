@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantitative Database | Live Market Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0; padding: 0; background-color: #000000;
+            font-family: 'Inter Tight', sans-serif; color: #FFFFFF;
+            height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        
+        /* Unified Header Layout */
+        .header { 
+            text-align: center; margin-bottom: 20px; width: 85vw; 
+            position: relative; display: flex; justify-content: center; align-items: center; 
+        }
+        
+        .header h1 { margin: 0; font-size: 2rem; font-weight: 600; color: #FFFFFF; letter-spacing: -0.5px; }
+        
+        /* Navigation Button Styling */
+        .nav-btn {
+            position: absolute; left: 0;
+            background-color: #1C1C1E; color: #8E8E93; text-decoration: none;
+            padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 0.9rem;
+            transition: all 0.2s ease; border: 1px solid transparent;
+        }
+        
+        .nav-btn:hover { color: #FFFFFF; background-color: #3A3A3C; }
+        
+        /* The Spreadsheet Container */
+        .iframe-container {
+            width: 85vw; height: 75vh; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); background-color: #FFFFFF;
+        }
+        
+        /* Forces the Google Sheet to perfectly fill our custom container */
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html" class="nav-btn">← Back to Charts</a>
+        <h1>Quantitative Database</h1>
+    </div>
+
+    <div class="iframe-container">
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMXRNvl_MWdY7TDj8bXruKqlFyoulqEc33XWZ1q5tY9rn2rdLSB6F-VqufSwtHup2eLvZwcBA3fX-j/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false&amp;chrome=false"></iframe>
+        </div>
+
+</body>
+</html>
