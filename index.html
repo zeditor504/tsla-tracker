@@ -18,7 +18,12 @@
         }
         
         .header { text-align: center; margin-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 2.5rem; font-weight: 600; letter-spacing: -0.5px; }
+        
+        /* Added a smooth transition so the title fades beautifully between colors */
+        .header h1 { 
+            margin: 0; font-size: 2.5rem; font-weight: 600; letter-spacing: -0.5px; 
+            transition: color 0.4s ease, text-shadow 0.4s ease; 
+        }
         .header p { margin: 5px 0 0 0; color: #8E8E93; font-size: 1.1rem; }
 
         .toggle-container {
@@ -35,9 +40,22 @@
             padding: 8px 16px; border-radius: 100px; cursor: pointer; 
             transition: all 0.2s ease; flex-shrink: 0; 
         }
-        .toggle-btn:hover { color: #FFFFFF; }
-        .toggle-btn.active {
+        
+        /* 1. DEFAULT TIME BUTTON LOGIC */
+        .time-btn:hover { color: #FFFFFF; }
+        .time-btn.active {
             background-color: #3A3A3C; color: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* 2. DYNAMIC BRAND COLOR LOGIC FOR STOCKS (Uses CSS Variables) */
+        .symbol-btn:hover { 
+            color: var(--brand-color); 
+            background-color: rgba(255, 255, 255, 0.05); /* Subtle white highlight on hover */
+        }
+        .symbol-btn.active {
+            background-color: var(--brand-color); 
+            color: var(--text-color); /* Automatically flips between black/white text for readability */
+            box-shadow: 0 0 15px var(--brand-color); /* Emits a neon glow matching the brand */
         }
 
         .legend-container {
@@ -52,7 +70,6 @@
             overflow: hidden; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
         }
         
-        /* NEW: Timezone Note Styling */
         .chart-footer {
             width: 85vw; text-align: right; margin-top: 8px;
             font-size: 0.85rem; color: #8E8E93; font-weight: 400;
@@ -62,18 +79,18 @@
 <body>
     
     <div class="header">
-        <h1 id="stock-title">TSLA</h1>
+        <h1 id="stock-title" style="color: #E31937; text-shadow: 0px 0px 20px #E3193766;">TSLA</h1>
         <p>Live Market Tracking & Volume</p>
     </div>
 
     <div class="toggle-container">
-        <button class="toggle-btn symbol-btn active" onclick="setSymbol('NASDAQ:TSLA', 'TSLA', this)">TSLA</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:NVDA', 'NVDA', this)">NVDA</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:AAPL', 'AAPL', this)">AAPL</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:MSFT', 'MSFT', this)">MSFT</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:AMZN', 'AMZN', this)">AMZN</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:GOOG', 'GOOG', this)">GOOG</button>
-        <button class="toggle-btn symbol-btn" onclick="setSymbol('NASDAQ:META', 'META', this)">META</button>
+        <button class="toggle-btn symbol-btn active" style="--brand-color: #E31937; --text-color: #FFFFFF;" onclick="setSymbol('NASDAQ:TSLA', 'TSLA', '#E31937', this)">TSLA</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #76B900; --text-color: #000000;" onclick="setSymbol('NASDAQ:NVDA', 'NVDA', '#76B900', this)">NVDA</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #A2AAAD; --text-color: #000000;" onclick="setSymbol('NASDAQ:AAPL', 'AAPL', '#A2AAAD', this)">AAPL</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #00A4EF; --text-color: #000000;" onclick="setSymbol('NASDAQ:MSFT', 'MSFT', '#00A4EF', this)">MSFT</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #FF9900; --text-color: #000000;" onclick="setSymbol('NASDAQ:AMZN', 'AMZN', '#FF9900', this)">AMZN</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #4285F4; --text-color: #FFFFFF;" onclick="setSymbol('NASDAQ:GOOG', 'GOOG', '#4285F4', this)">GOOG</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #0668E1; --text-color: #FFFFFF;" onclick="setSymbol('NASDAQ:META', 'META', '#0668E1', this)">META</button>
     </div>
 
     <div class="toggle-container">
@@ -109,14 +126,21 @@
           let currentTimeMode = "range"; 
           let currentTimeValue = "YTD";
 
-          function setSymbol(symbolCode, symbolName, clickedButton) {
+          function setSymbol(symbolCode, symbolName, brandColor, clickedButton) {
               if (clickedButton) {
                   let buttons = document.querySelectorAll('.symbol-btn');
                   buttons.forEach(btn => btn.classList.remove('active'));
                   clickedButton.classList.add('active');
               }
               currentSymbol = symbolCode;
-              document.getElementById('stock-title').innerText = symbolName; 
+              
+              // NEW: Injects the specific brand color into the header text!
+              let titleObj = document.getElementById('stock-title');
+              titleObj.innerText = symbolName; 
+              titleObj.style.color = brandColor;
+              // Adds '66' to the end of the hex code to give the shadow a subtle 40% transparency glow
+              titleObj.style.textShadow = `0px 0px 20px ${brandColor}66`;
+              
               renderChart();
           }
 
@@ -137,7 +161,7 @@
               let widgetConfig = {
                   "autosize": true,
                   "symbol": currentSymbol,   
-                  "timezone": "America/Chicago", /* UPDATED: Forces CT */
+                  "timezone": "America/Chicago", 
                   "theme": "dark",
                   "style": "3", 
                   "locale": "en",
@@ -149,7 +173,6 @@
                   "studies": ["Volume@tv-basicstudies"]
               };
 
-              /* THE FIX: Conditionally pass interval OR range to prevent autoscaling overlap */
               if (currentTimeMode === "range") {
                   widgetConfig.range = currentTimeValue;
               } else {
