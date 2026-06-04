@@ -60,17 +60,33 @@
             color: #FFFFFF; font-weight: 700;
             background-color: #000000;
             position: sticky; top: 0; z-index: 10;
+            /* Enforce vertical and horizontal alignment */
+            vertical-align: middle;
+            text-align: center;
         }
         
         td {
             padding: 12px 15px;
             border-bottom: 1px solid #1C1C1E;
             border-right: 1px solid #1C1C1E;
+            /* Enforce strict vertical and horizontal centering */
+            vertical-align: middle;
+            text-align: center;
         }
 
         th:last-child, td:last-child { border-right: none; }
-        th:first-child, td:first-child { text-align: left; font-weight: 700; }
-        td:nth-child(2) { font-weight: 700; }
+        
+        /* Maintain necessary left alignment for chronological layouts while keeping vertical alignment uniform */
+        th:first-child, td:first-child { 
+            text-align: left; 
+            font-weight: 700; 
+            vertical-align: middle;
+        }
+        
+        td:nth-child(2) { 
+            font-weight: 700; 
+            vertical-align: middle;
+        }
 
         /* Conditional formatting custom classes */
         .bg-pos { background-color: #c8e6c9 !important; color: #2e7d32 !important; font-weight: 600; }
@@ -179,6 +195,7 @@
                         tdDate.innerText = dateVal;
                         tdDate.style.fontWeight = '700';
                         tdDate.style.textAlign = 'left';
+                        tdDate.style.verticalAlign = 'middle';
                         tdDate.style.paddingTop = '20px';
                         tdDate.style.borderRight = '1px solid #1C1C1E';
                         tr.appendChild(tdDate);
