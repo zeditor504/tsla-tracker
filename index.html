@@ -102,7 +102,7 @@
     <div class="header">
         <h1 id="stock-title" style="color: #E31937; text-shadow: 0px 0px 12.5px #E3193766;">TSLA</h1>
         <p id="market-status">Live Market Tracking & Volume</p>
-        <a href="data.html" class="database-link">View End-Of-Day Market Close Database ▶</a>
+        <a href="data.html" class="database-link">View Quantitative Market Ledger ▶</a>
     </div>
 
     <div class="toggle-container">
@@ -237,38 +237,86 @@
         }
         
         function formatCurrency(num) {
-            return num ? '$' + num.toFixed(2) : '-';
+            return num ? '$' + parseFloat(num).toFixed(2) : '-';
         }
 
+        // --- BULLETPROOF MULTI-PROXY FETCH ENGINE ---
         async function fetchKeyStats(ticker) {
             document.getElementById('stats-title-ticker').innerText = ticker;
             
             const ids = ['mcap', 'pe', 'div', 'avgvol', 'high', 'low', 'open', 'vol', '52high', '52low'];
             ids.forEach(id => document.getElementById(`stat-${id}`).innerText = "---");
+            currentFetchedPrice = "---";
+            updateClockAndStatus(); 
             
-            const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-            
-            try {
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                const quote = JSON.parse(data.contents).quoteResponse.result[0];
-                
-                if(quote) {
-                    currentFetchedPrice = formatCurrency(quote.regularMarketPrice);
-                    document.getElementById('stat-mcap').innerText = formatLargeNumber(quote.marketCap);
-                    document.getElementById('stat-pe').innerText = quote.trailingPE ? quote.trailingPE.toFixed(2) : '-';
-                    document.getElementById('stat-div').innerText = quote.trailingAnnualDividendYield ? (quote.trailingAnnualDividendYield * 100).toFixed(2) + '%' : '-';
-                    document.getElementById('stat-avgvol').innerText = formatLargeNumber(quote.averageDailyVolume3Month);
-                    document.getElementById('stat-high').innerText = formatCurrency(quote.regularMarketDayHigh);
-                    document.getElementById('stat-low').innerText = formatCurrency(quote.regularMarketDayLow);
-                    document.getElementById('stat-open').innerText = formatCurrency(quote.regularMarketOpen);
-                    document.getElementById('stat-vol').innerText = formatLargeNumber(quote.regularMarketVolume);
-                    document.getElementById('stat-52high').innerText = formatCurrency(quote.fiftyTwoWeekHigh);
-                    document.getElementById('stat-52low').innerText = formatCurrency(quote.fiftyTwoWeekLow);
-                    
-                    updateClockAndStatus();
+            // We use two robust Yahoo endpoints to ensure we get both core pricing and detailed ratios
+            const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`;
+            const summaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=summaryDetail,price`;
+
+            const fetchWithFallback = async (targetUrl) => {
+                const proxies = [
+                    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+                ];
+                for (let proxy of proxies) {
+                    try {
+                        let res = await fetch(proxy);
+                        if (!res.ok) continue;
+                        
+                        let text;
+                        // AllOrigins wraps the JSON inside a "contents" string
+                        if (proxy.includes('allorigins')) {
+                            const jsonRes = await res.json();
+                            text = jsonRes.contents;
+                        } else {
+                            text = await res.text();
+                        }
+                        
+                        return JSON.parse(text); // Safe parsing
+                    } catch (e) { continue; } // Silently fail over to the next proxy
                 }
+                return null;
+            }
+
+            try {
+                const [chartData, summaryData] = await Promise.all([
+                    fetchWithFallback(chartUrl),
+                    fetchWithFallback(summaryUrl)
+                ]);
+
+                if (chartData && chartData.chart && chartData.chart.result) {
+                    const meta = chartData.chart.result[0].meta;
+                    currentFetchedPrice = formatCurrency(meta.regularMarketPrice);
+                    document.getElementById('stat-high').innerText = formatCurrency(meta.regularMarketDayHigh);
+                    document.getElementById('stat-low').innerText = formatCurrency(meta.regularMarketDayLow);
+                    document.getElementById('stat-open').innerText = formatCurrency(meta.regularMarketOpen);
+                    document.getElementById('stat-vol').innerText = formatLargeNumber(meta.regularMarketVolume);
+                }
+
+                if (summaryData && summaryData.quoteSummary && summaryData.quoteSummary.result) {
+                    const res = summaryData.quoteSummary.result[0];
+                    
+                    // Safely extract deeply nested JSON to prevent crashes
+                    const safeGet = (obj, path) => {
+                        try { return path.split('.').reduce((o, i) => o[i], obj); } catch(e) { return null; }
+                    };
+
+                    const mcap = safeGet(res, 'price.marketCap.raw') || safeGet(res, 'summaryDetail.marketCap.raw');
+                    const pe = safeGet(res, 'summaryDetail.trailingPE.raw');
+                    const div = safeGet(res, 'summaryDetail.dividendYield.raw');
+                    const avgVol = safeGet(res, 'summaryDetail.averageVolume.raw') || safeGet(res, 'price.averageDailyVolume10Day.raw');
+                    const high52 = safeGet(res, 'summaryDetail.fiftyTwoWeekHigh.raw');
+                    const low52 = safeGet(res, 'summaryDetail.fiftyTwoWeekLow.raw');
+
+                    if(mcap) document.getElementById('stat-mcap').innerText = formatLargeNumber(mcap);
+                    if(pe) document.getElementById('stat-pe').innerText = pe.toFixed(2);
+                    if(div) document.getElementById('stat-div').innerText = (div * 100).toFixed(2) + '%';
+                    if(avgVol) document.getElementById('stat-avgvol').innerText = formatLargeNumber(avgVol);
+                    if(high52) document.getElementById('stat-52high').innerText = formatCurrency(high52);
+                    if(low52) document.getElementById('stat-52low').innerText = formatCurrency(low52);
+                }
+                
+                updateClockAndStatus();
             } catch (e) {
                 console.log("Stats fetch error:", e);
             }
