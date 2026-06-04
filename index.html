@@ -155,6 +155,7 @@
     
     <div class="chart-footer">
         <div id="live-clock">Time: --:--:-- -- Central Time</div>
+        <div id="market-countdown" style="color: #FFFFFF; font-weight: 600; text-align: center;">Calculating...</div>
         <div>Note: All times are in (CT - Central Time Zone).</div>
     </div>
 
@@ -196,6 +197,7 @@
         /* DOM Element Cache */
         const DOM = {
             clock: document.getElementById('live-clock'),
+            countdown: document.getElementById('market-countdown'),
             status: document.getElementById('market-status'),
             title: document.getElementById('stock-title'),
             statsTicker: document.getElementById('stats-title-ticker'),
@@ -480,6 +482,49 @@
                 DOM.status.innerHTML = `Live Market Tracking <span style="color: #76B900; font-weight: 600;">(Market Open)</span>`;
             } else {
                 DOM.status.innerHTML = `Market Closed <span style="color: #E31937; font-weight: 600;">(At Close: ${currentFetchedPrice})</span>`;
+            }
+
+            // --- DYNAMIC COUNTDOWN ENGINE ---
+            let targetDayOffset = 0;
+            let targetMinutes = 0;
+            let isClosing = false;
+            
+            if (day === 0) { // Sunday
+                targetDayOffset = 1;
+                targetMinutes = marketOpen;
+            } else if (day === 6) { // Saturday
+                targetDayOffset = 2;
+                targetMinutes = marketOpen;
+            } else { // Weekday
+                if (timeInMinutes < marketOpen) {
+                    targetDayOffset = 0; // Today, before open
+                    targetMinutes = marketOpen;
+                } else if (timeInMinutes >= marketOpen && timeInMinutes < marketClose) {
+                    targetDayOffset = 0; // Today, before close
+                    targetMinutes = marketClose;
+                    isClosing = true;
+                } else { // Today, after close
+                    targetDayOffset = (day === 5) ? 3 : 1; // If Friday, target Monday (+3 days). Else tomorrow (+1).
+                    targetMinutes = marketOpen;
+                }
+            }
+            
+            // Calculate absolute difference in minutes
+            let diffMinutes = 0;
+            if (targetDayOffset === 0) {
+                diffMinutes = targetMinutes - timeInMinutes;
+            } else {
+                diffMinutes = (24 * 60 - timeInMinutes) + ((targetDayOffset - 1) * 24 * 60) + targetMinutes;
+            }
+            
+            const diffHrs = Math.floor(diffMinutes / 60);
+            const diffMins = diffMinutes % 60;
+            
+            // Apply text to the DOM
+            if (isClosing) {
+                DOM.countdown.innerText = `Market closes in ${diffHrs}h ${diffMins}m`;
+            } else {
+                DOM.countdown.innerText = `Market opens in ${diffHrs}h ${diffMins}m`;
             }
         }
 
