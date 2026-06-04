@@ -7,29 +7,29 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
         /* Base document properties */
         body {
-            margin: 0; padding: 0; background-color: #000000;
+            margin: 0; padding: 20px 0; background-color: #000000;
             font-family: 'Inter Tight', sans-serif; color: #FFFFFF;
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-            align-items: center;
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; overflow-x: hidden;
         }
         
         /* Header layout and typography */
         .header { 
-            text-align: center; width: 100%; height: 80px;
+            text-align: center; width: 95vw; max-width: 1400px;
             display: flex; justify-content: center; align-items: center; position: relative;
-            flex-shrink: 0;
+            flex-shrink: 0; margin-bottom: 25px; margin-top: 10px;
         }
         
         .header h1 { margin: 0; font-size: 1.8rem; font-weight: 600; color: #FFFFFF; letter-spacing: -0.5px; }
         
         /* Navigation routing button */
         .nav-btn {
-            position: absolute; left: 20px;
+            position: absolute; left: 0;
             background-color: #1C1C1E; color: #8E8E93; text-decoration: none;
             padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 0.9rem;
             transition: all 0.2s ease; border: 1px solid transparent;
@@ -37,26 +37,53 @@
         
         .nav-btn:hover { color: #FFFFFF; background-color: #3A3A3C; }
         
-        /* Defines viewport meta tag for responsive design */
-        .iframe-container {
-            flex-grow: 1; 
-            width: 100vw; 
+        /* Native Data Table Styling */
+        .table-container {
+            width: 95vw; max-width: 1400px;
+            overflow-x: auto;
+            border: 1px solid #1C1C1E;
+            border-radius: 8px;
             background-color: #000000;
-            overflow: hidden; /* Critical: Crops anything that bleeds past the container bounds */
-            position: relative;
+            display: none; /* Hidden until Javascript paints the data */
         }
         
-        /* Applies negative spatial margins to obscure native iframe UI, borders, and scrollbars */
-        iframe { 
-            position: absolute; 
-            top: -5px; 
-            left: -5px; 
-            /* Extended bounds to physically push the Google Sheets scrollbars completely off-screen */
-            width: calc(100% + 25px); 
-            height: calc(100% + 25px); 
-            border: none; 
-            display: block; 
+        table {
+            width: 100%; border-collapse: collapse; text-align: center;
+            font-size: 0.95rem; white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
+        
+        th {
+            padding: 14px 15px;
+            border-bottom: 2px solid #FFFFFF; /* Prominent white line matching screenshot */
+            border-right: 1px solid #2C2C2E;
+            color: #FFFFFF; font-weight: 700;
+            background-color: #000000;
+            position: sticky; top: 0; z-index: 10;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #1C1C1E;
+            border-right: 1px solid #1C1C1E;
+        }
+
+        th:last-child, td:last-child { border-right: none; }
+        th:first-child, td:first-child { text-align: left; font-weight: 700; }
+        td:nth-child(2) { font-weight: 700; }
+
+        /* Conditional formatting custom classes */
+        .bg-pos { background-color: #c8e6c9 !important; color: #2e7d32 !important; font-weight: 600; }
+        .bg-neg { background-color: #f4cccc !important; color: #cc0000 !important; font-weight: 600; }
+        .bg-gold { background-color: #fff2cc !important; color: #b45f06 !important; font-weight: 700; }
+        
+        #loading { color: #8E8E93; margin-top: 50px; font-size: 1.1rem; font-weight: 600; }
+        
+        /* Custom UI Scrollbar for the table wrapper */
+        .table-container::-webkit-scrollbar { height: 8px; width: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #000000; }
+        .table-container::-webkit-scrollbar-thumb { background: #2C2C2E; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #3A3A3C; }
     </style>
 </head>
 <body>
@@ -66,9 +93,186 @@
         <h1>At Close History</h1>
     </div>
 
-    <div class="iframe-container">
-        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMXRNvl_MWdY7TDj8bXruKqlFyoulqEc33XWZ1q5tY9rn2rdLSB6F-VqufSwtHup2eLvZwcBA3fX-j/pubhtml?gid=0&amp;single=true&amp;widget=false&amp;headers=false&amp;chrome=false"></iframe>
+    <div id="loading">Connecting to Database natively...</div>
+    
+    <div class="table-container" id="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Stock Symbol</th>
+                    <th>Closing Price</th>
+                    <th colspan="2">Change over Yesterday</th>
+                    <th>52 Week High</th>
+                    <th></th> <th>Cost of 25 shares</th>
+                    <th>Expected Profit</th>
+                    <th>Upside Potential</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
     </div>
 
+    <script>
+        // Directly targets the hidden Google Sheets CSV Export endpoint
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMXRNvl_MWdY7TDj8bXruKqlFyoulqEc33XWZ1q5tY9rn2rdLSB6F-VqufSwtHup2eLvZwcBA3fX-j/pub?gid=0&single=true&output=csv";
+
+        // Ticker Brand Colors
+        const BRAND_COLORS = {
+            'TSLA': '#E31937', 'NVDA': '#76B900', 'AAPL': '#BFBFBF',
+            'MSFT': '#00A4EF', 'AMZN': '#FF9900', 'GOOG': '#4285F4', 'META': '#0668E1'
+        };
+
+        // Advanced CSV Parser to safely handle commas inside quoted numbers (e.g. "$10,701.25")
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            let row = [], col = '';
+            for (let c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                if (cc === '"' && quote && nc === '"') { col += cc; ++c; continue; }
+                if (cc === '"') { quote = !quote; continue; }
+                if (cc === ',' && !quote) { row.push(col); col = ''; continue; }
+                if (cc === '\r' && nc === '\n' && !quote) {
+                    row.push(col); arr.push(row); col = ''; row = []; ++c; continue;
+                }
+                if (cc === '\n' && !quote) {
+                    row.push(col); arr.push(row); col = ''; row = []; continue;
+                }
+                col += cc;
+            }
+            if (col || row.length) { row.push(col); arr.push(row); }
+            return arr;
+        }
+
+        async function loadData() {
+            try {
+                // Fetch the raw data feed, appending timestamp to bypass browser cache
+                const res = await fetch(CSV_URL + "&_t=" + Date.now());
+                const text = await res.text();
+                const rows = parseCSV(text);
+
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = '';
+                
+                // Loop through rows (Skipping index 0 because it's the backend header row)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.length < 10) continue; 
+                    
+                    const dateVal = row[0] ? row[0].replace(/^'/, '').trim() : "";
+                    const symbol = row[1] ? row[1].replace(/^'/, '').trim() : "";
+                    
+                    // Render completely blank operational buffer rows to retain gridlines
+                    if (!dateVal && !symbol) {
+                        let tr = document.createElement('tr');
+                        for(let j=0; j<10; j++) tr.appendChild(document.createElement('td'));
+                        tbody.appendChild(tr);
+                        continue;
+                    }
+
+                    // Render chronological Date separator rows
+                    if (dateVal && !symbol) {
+                        let tr = document.createElement('tr');
+                        let tdDate = document.createElement('td');
+                        tdDate.innerText = dateVal;
+                        tdDate.style.fontWeight = '700';
+                        tdDate.style.textAlign = 'left';
+                        tdDate.style.paddingTop = '20px';
+                        tdDate.style.borderRight = '1px solid #1C1C1E';
+                        tr.appendChild(tdDate);
+                        
+                        // Fill remaining columns with empty grid cells
+                        for(let j=1; j<10; j++) tr.appendChild(document.createElement('td'));
+                        tbody.appendChild(tr);
+                        continue;
+                    }
+
+                    // Isolate values and strip the protective apostrophe added by Python
+                    const price = row[2] ? row[2].replace(/^'/, '').trim() : "";
+                    const chgPct = row[3] ? row[3].replace(/^'/, '').trim() : "";
+                    const chgDol = row[4] ? row[4].replace(/^'/, '').trim() : "";
+                    const high52 = row[5] ? row[5].replace(/^'/, '').trim() : "";
+                    const highDate = row[6] ? row[6].replace(/^'/, '').trim() : "";
+                    const cost = row[7] ? row[7].replace(/^'/, '').trim() : "";
+                    const profit = row[8] ? row[8].replace(/^'/, '').trim() : "";
+                    const upside = row[9] ? row[9].replace(/^'/, '').trim() : "";
+                    
+                    let tr = document.createElement('tr');
+                    
+                    // Column 0: Empty buffer beneath Date
+                    tr.appendChild(document.createElement('td')); 
+                    
+                    // Column 1: Stock Symbol Colors
+                    let tdSym = document.createElement('td');
+                    tdSym.innerText = symbol;
+                    tdSym.style.color = BRAND_COLORS[symbol] || '#FFFFFF';
+                    tr.appendChild(tdSym);
+                    
+                    let tdPrice = document.createElement('td');
+                    tdPrice.innerText = price;
+                    tr.appendChild(tdPrice);
+                    
+                    // Column 3 & 4: Daily Changes (Green/Red conditionals)
+                    let tdPct = document.createElement('td');
+                    tdPct.innerText = chgPct;
+                    if (chgPct.includes('↑') || chgPct.includes('+')) tdPct.className = 'bg-pos';
+                    else if (chgPct.includes('↓') || chgPct.includes('-')) tdPct.className = 'bg-neg';
+                    tr.appendChild(tdPct);
+                    
+                    let tdDol = document.createElement('td');
+                    tdDol.innerText = chgDol;
+                    if (chgDol.includes('↑') || chgDol.includes('+')) tdDol.className = 'bg-pos';
+                    else if (chgDol.includes('↓') || chgDol.includes('-')) tdDol.className = 'bg-neg';
+                    tr.appendChild(tdDol);
+                    
+                    let tdH52 = document.createElement('td');
+                    tdH52.innerText = high52;
+                    tr.appendChild(tdH52);
+                    
+                    let tdHD = document.createElement('td');
+                    tdHD.innerText = highDate;
+                    tr.appendChild(tdHD);
+                    
+                    let tdCost = document.createElement('td');
+                    tdCost.innerText = cost;
+                    tr.appendChild(tdCost);
+                    
+                    // Column 8: Expected Profit (Gold coloring)
+                    let tdProf = document.createElement('td');
+                    tdProf.innerText = profit;
+                    tdProf.className = 'bg-gold';
+                    tr.appendChild(tdProf);
+                    
+                    // Column 9: Upside Potential Dynamic Heatmap Engine
+                    let tdUp = document.createElement('td');
+                    tdUp.innerText = upside;
+                    let num = parseFloat(upside.replace('%',''));
+                    if (!isNaN(num)) {
+                        // Dynamically scales green opacity from 0% upside up to a 30% upside ceiling
+                        let opacity = Math.min(num / 30, 1);
+                        tdUp.style.backgroundColor = `rgba(87, 187, 138, ${opacity})`;
+                        tdUp.style.color = '#FFFFFF';
+                        tdUp.style.fontWeight = '600';
+                    }
+                    tr.appendChild(tdUp);
+                    
+                    tbody.appendChild(tr);
+                }
+                
+                // Swap UI states to expose the table
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('table-container').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerText = "Failed to load database. Please try refreshing.";
+            }
+        }
+        
+        // Boot-up Execution
+        loadData();
+    </script>
 </body>
 </html>
