@@ -11,12 +11,16 @@
     
     <style>
         body { 
-            margin: 0; padding: 0; background-color: #000000; 
+            margin: 0; padding: 20px 0; background-color: #000000; 
             font-family: 'Inter Tight', sans-serif; color: #FFFFFF;
-            height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; overflow-x: hidden;
         }
         
+        .header, .toggle-container, .legend-container, .chart-wrapper, .chart-footer, .stats-container {
+            width: 95vw; max-width: 1400px;
+        }
+
         .header { text-align: center; margin-bottom: 15px; position: relative; }
         
         .header h1 { 
@@ -25,7 +29,6 @@
         }
         .header p { margin: 5px 0 0 0; color: #8E8E93; font-size: 1.1rem; }
 
-        /* The link to your secondary Database page */
         .database-link {
             display: inline-block; margin-top: 15px; padding: 8px 20px;
             background-color: #1C1C1E; color: #8E8E93; border-radius: 100px;
@@ -37,7 +40,7 @@
         .toggle-container {
             display: flex; gap: 5px; background-color: #1C1C1E; 
             padding: 4px; border-radius: 100px; margin-bottom: 12px;
-            width: 85vw; overflow-x: auto; white-space: nowrap;
+            overflow-x: auto; white-space: nowrap;
             -ms-overflow-style: none; scrollbar-width: none;  
         }
         .toggle-container::-webkit-scrollbar { display: none; }
@@ -54,36 +57,43 @@
             background-color: #3A3A3C; color: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .symbol-btn:hover { 
-            color: var(--brand-color); 
-            background-color: rgba(255, 255, 255, 0.05); 
-        }
+        .symbol-btn:hover { color: var(--brand-color); background-color: rgba(255, 255, 255, 0.05); }
         .symbol-btn.active {
-            background-color: var(--brand-color); 
-            color: var(--text-color); 
+            background-color: var(--brand-color); color: var(--text-color); 
             box-shadow: 0 0 12.5px var(--brand-color);
         }
 
-        .legend-container {
-            width: 85vw; display: flex; gap: 20px; margin-bottom: 12px; justify-content: flex-start;
-        }
+        .legend-container { display: flex; gap: 20px; margin-bottom: 12px; justify-content: flex-start; }
         .legend-item { display: flex; align-items: center; gap: 8px; }
         .color-square { width: 12px; height: 12px; border-radius: 3px; }
         .legend-text { font-size: 0.9rem; font-weight: 400; color: #FFFFFF; }
 
         .chart-wrapper { 
-            width: 85vw; height: 55vh; border-radius: 20px; 
-            overflow: hidden; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
+            height: 60vh; border-radius: 20px; overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05); 
         }
         
         .chart-footer {
-            width: 85vw; display: flex; justify-content: space-between; align-items: center;
-            margin-top: 8px; font-size: 0.85rem; color: #8E8E93; font-weight: 400;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; font-size: 0.85rem; color: #8E8E93; font-weight: 400;
         }
-        
-        #live-clock {
-            color: #FFFFFF; font-weight: 600;
-            font-variant-numeric: tabular-nums; 
+        #live-clock { color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        /* KEY STATISTICS UI */
+        .stats-container { margin-top: 40px; margin-bottom: 40px; text-align: left; }
+        .stats-container h2 {
+            font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; 
+            border-bottom: 1px solid #2C2C2E; padding-bottom: 15px; color: #FFFFFF;
+        }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 20px; }
+        .stat-box { display: flex; flex-direction: column; gap: 6px; }
+        .stat-label { font-size: 0.9rem; color: #FFFFFF; font-weight: 600; }
+        .stat-value { font-size: 0.95rem; color: #FFFFFF; font-weight: 400; font-variant-numeric: tabular-nums; }
+
+        @media (max-width: 800px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-wrapper { height: 50vh; }
+            .chart-footer { flex-direction: column; align-items: flex-start; gap: 5px; }
         }
     </style>
 </head>
@@ -106,20 +116,19 @@
     </div>
 
     <div class="toggle-container">
-        <button class="toggle-btn time-btn" title="Interval: 1-minute data points (Provides granular intraday context)" onclick="setTime('interval', '1', this)">1m</button>
-        <button class="toggle-btn time-btn" title="Interval: 2-minute data points (Provides granular intraday context)" onclick="setTime('interval', '2', this)">2m</button>
-        <button class="toggle-btn time-btn" title="Interval: 3-minute data points (Provides granular intraday context)" onclick="setTime('interval', '3', this)">3m</button>
-        <button class="toggle-btn time-btn" title="Interval: 5-minute data points (Provides short-term trading context)" onclick="setTime('interval', '5', this)">5m</button>
-        <button class="toggle-btn time-btn" title="Interval: 15-minute data points (Provides short-term swing context)" onclick="setTime('interval', '15', this)">15m</button>
+        <button class="toggle-btn time-btn" title="Interval: 1m data points (Granular intraday context)" onclick="setTime('interval', '1', this)">1m</button>
+        <button class="toggle-btn time-btn" title="Interval: 2m data points (Granular intraday context)" onclick="setTime('interval', '2', this)">2m</button>
+        <button class="toggle-btn time-btn" title="Interval: 3m data points (Granular intraday context)" onclick="setTime('interval', '3', this)">3m</button>
+        <button class="toggle-btn time-btn" title="Interval: 5m data points (Short-term trading context)" onclick="setTime('interval', '5', this)">5m</button>
+        <button class="toggle-btn time-btn" title="Interval: 15m data points (Short-term swing context)" onclick="setTime('interval', '15', this)">15m</button>
+        <button class="toggle-btn time-btn" title="Interval: 1-Hour data points (Pulls weeks of history)" onclick="setTime('interval', '60', this)">1H</button>
+        <button class="toggle-btn time-btn" title="Interval: 4-Hour data points (Pulls months of history)" onclick="setTime('interval', '240', this)">4H</button>
         
-        <button class="toggle-btn time-btn" title="Interval: 1-Hour data points (Pulls weeks of history to fill screen)" onclick="setTime('interval', '60', this)">1H</button>
-        <button class="toggle-btn time-btn" title="Interval: 4-Hour data points (Pulls months of history to fill screen)" onclick="setTime('interval', '240', this)">4H</button>
-        
-        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last 24 Hours of trading to your screen" onclick="setTime('range', '1D', this)">24H</button>
-        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Week of trading to your screen" onclick="setTime('range', '5D', this)">Week</button>
-        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Month of trading to your screen" onclick="setTime('range', '1M', this)">Month</button>
-        <button class="toggle-btn time-btn active" title="Range: Auto-fits Year-To-Date trading to your screen" onclick="setTime('range', 'YTD', this)">YTD</button>
-        <button class="toggle-btn time-btn" title="Range: Auto-fits all available history to your screen" onclick="setTime('range', 'ALL', this)">Max</button>
+        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last 24 Hours of trading" onclick="setTime('range', '1D', this)">24H</button>
+        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Week of trading" onclick="setTime('range', '5D', this)">Week</button>
+        <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Month of trading" onclick="setTime('range', '1M', this)">Month</button>
+        <button class="toggle-btn time-btn active" title="Range: Auto-fits Year-To-Date trading" onclick="setTime('range', 'YTD', this)">YTD</button>
+        <button class="toggle-btn time-btn" title="Range: Auto-fits all available history" onclick="setTime('range', 'ALL', this)">Max</button>
     </div>
 
     <div class="legend-container">
@@ -132,115 +141,6 @@
         <div class="tradingview-widget-container" style="height:100%;width:100%">
           <div id="tradingview_chart" style="height:100%;width:100%"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-          
-          <script type="text/javascript">
-          
-          // Reverted back to storing BOTH Mode and Value
-          let currentSymbol = "NASDAQ:TSLA";
-          let currentTimeMode = "range"; 
-          let currentTimeValue = "YTD";
-
-          function setSymbol(symbolCode, symbolName, brandColor, clickedButton) {
-              if (clickedButton) {
-                  let buttons = document.querySelectorAll('.symbol-btn');
-                  buttons.forEach(btn => btn.classList.remove('active'));
-                  clickedButton.classList.add('active');
-              }
-              currentSymbol = symbolCode;
-              
-              let titleObj = document.getElementById('stock-title');
-              titleObj.innerText = symbolName; 
-              titleObj.style.color = brandColor;
-              titleObj.style.textShadow = `0px 0px 12.5px ${brandColor}66`;
-              
-              renderChart();
-          }
-
-          function setTime(mode, value, clickedButton) {
-              if (clickedButton) {
-                  let buttons = document.querySelectorAll('.time-btn');
-                  buttons.forEach(btn => btn.classList.remove('active'));
-                  clickedButton.classList.add('active');
-              }
-              currentTimeMode = mode;
-              currentTimeValue = value;
-              renderChart();
-          }
-
-          function renderChart() {
-              document.getElementById('tradingview_chart').innerHTML = '';
-              
-              let widgetConfig = {
-                  "autosize": true,
-                  "symbol": currentSymbol,   
-                  "timezone": "America/Chicago", 
-                  "theme": "dark",
-                  "style": "3", 
-                  "locale": "en",
-                  "enable_publishing": false,
-                  "allow_symbol_change": false, 
-                  "hide_top_toolbar": true, 
-                  "hide_legend": true, 
-                  "container_id": "tradingview_chart"
-                  // 'studies' is still safely deleted so you don't get the double volume bug!
-              };
-
-              // Reverted back to the if/else logic so it safely routes Interval vs Range!
-              if (currentTimeMode === "range") {
-                  widgetConfig.range = currentTimeValue;
-              } else {
-                  widgetConfig.interval = currentTimeValue;
-              }
-
-              new TradingView.widget(widgetConfig);
-          }
-
-          renderChart();
-
-        // --- LIVE CLOCK & MARKET STATUS ENGINE ---
-          function updateClockAndStatus() {
-              const now = new Date();
-              
-              // 1. Live Central Time Clock
-              const timeOptions = { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-              const timeString = now.toLocaleTimeString('en-US', timeOptions);
-              document.getElementById('live-clock').innerText = `Time: ${timeString} Central Time`;
-
-              // 2. Market Status Logic (Calculated safely in Central Time)
-              const ctString = now.toLocaleString("en-US", { timeZone: "America/Chicago" });
-              const ctDate = new Date(ctString);
-
-              const day = ctDate.getDay(); // 0 = Sunday, 6 = Saturday
-              const hour = ctDate.getHours(); // 0 to 23
-              const minute = ctDate.getMinutes(); // 0 to 59
-              
-              const timeInMinutes = (hour * 60) + minute;
-              const marketOpen = (8 * 60) + 30; // 8:30 AM CT
-              const marketClose = 15 * 60;      // 3:00 PM CT
-              
-              let isMarketOpen = false;
-              
-              // Check if it's a weekday and within market hours
-              if (day !== 0 && day !== 6) {
-                  if (timeInMinutes >= marketOpen && timeInMinutes < marketClose) {
-                      isMarketOpen = true;
-                  }
-              }
-              
-              // 3. Inject into the UI
-              const statusEl = document.getElementById('market-status');
-              if (isMarketOpen) {
-                  statusEl.innerHTML = `Live Market Tracking <span style="color: #76B900; font-weight: 600;">(Market Open)</span>`;
-              } else {
-                  statusEl.innerHTML = `Market Closed <span style="color: #E31937; font-weight: 600;">(At Close)</span>`;
-              }
-          }
-
-          // Run the clock engine every 1 second (1000 milliseconds)
-          setInterval(updateClockAndStatus, 1000);
-          updateClockAndStatus(); // Run instantly on load
-              
-          </script>
         </div>
     </div>
     
@@ -248,6 +148,168 @@
         <div id="live-clock">Time: --:--:-- -- Central Time</div>
         <div>Note: All times are in (CT - Central Time Zone).</div>
     </div>
-    
+
+    <div class="stats-container">
+        <h2 id="stats-title"><span id="stats-title-ticker">TSLA</span> Key Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-box"><span class="stat-label">Market cap</span><span class="stat-value" id="stat-mcap">---</span></div>
+            <div class="stat-box"><span class="stat-label">Price-Earnings ratio</span><span class="stat-value" id="stat-pe">---</span></div>
+            <div class="stat-box"><span class="stat-label">Dividend yield</span><span class="stat-value" id="stat-div">---</span></div>
+            <div class="stat-box"><span class="stat-label">Average volume</span><span class="stat-value" id="stat-avgvol">---</span></div>
+            
+            <div class="stat-box"><span class="stat-label">High today</span><span class="stat-value" id="stat-high">---</span></div>
+            <div class="stat-box"><span class="stat-label">Low today</span><span class="stat-value" id="stat-low">---</span></div>
+            <div class="stat-box"><span class="stat-label">Open price</span><span class="stat-value" id="stat-open">---</span></div>
+            <div class="stat-box"><span class="stat-label">Volume</span><span class="stat-value" id="stat-vol">---</span></div>
+            
+            <div class="stat-box"><span class="stat-label">52 Week high</span><span class="stat-value" id="stat-52high">---</span></div>
+            <div class="stat-box"><span class="stat-label">52 Week low</span><span class="stat-value" id="stat-52low">---</span></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        let currentSymbolCode = "NASDAQ:TSLA";
+        let currentTicker = "TSLA";
+        let currentTimeMode = "range"; 
+        let currentTimeValue = "YTD";
+        let currentFetchedPrice = "---";
+
+        function setSymbol(symbolCode, symbolName, brandColor, clickedButton) {
+            if (clickedButton) {
+                let buttons = document.querySelectorAll('.symbol-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                clickedButton.classList.add('active');
+            }
+            currentSymbolCode = symbolCode;
+            currentTicker = symbolName;
+            
+            let titleObj = document.getElementById('stock-title');
+            titleObj.innerText = symbolName; 
+            titleObj.style.color = brandColor;
+            titleObj.style.textShadow = `0px 0px 12.5px ${brandColor}66`;
+            
+            renderChart();
+            fetchKeyStats(currentTicker);
+        }
+
+        function setTime(mode, value, clickedButton) {
+            if (clickedButton) {
+                let buttons = document.querySelectorAll('.time-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                clickedButton.classList.add('active');
+            }
+            currentTimeMode = mode;
+            currentTimeValue = value;
+            renderChart();
+        }
+
+        function renderChart() {
+            document.getElementById('tradingview_chart').innerHTML = '';
+            let widgetConfig = {
+                "autosize": true,
+                "symbol": currentSymbolCode,   
+                "timezone": "America/Chicago", 
+                "theme": "dark",
+                "style": "3", 
+                "locale": "en",
+                "enable_publishing": false,
+                "allow_symbol_change": false, 
+                "hide_top_toolbar": true, 
+                "hide_legend": true, 
+                "container_id": "tradingview_chart"
+            };
+
+            if (currentTimeMode === "range") {
+                widgetConfig.range = currentTimeValue;
+            } else {
+                widgetConfig.interval = currentTimeValue;
+            }
+
+            new TradingView.widget(widgetConfig);
+        }
+
+        function formatLargeNumber(num) {
+            if (!num) return '-';
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            return num.toLocaleString();
+        }
+        
+        function formatCurrency(num) {
+            return num ? '$' + num.toFixed(2) : '-';
+        }
+
+        async function fetchKeyStats(ticker) {
+            document.getElementById('stats-title-ticker').innerText = ticker;
+            
+            const ids = ['mcap', 'pe', 'div', 'avgvol', 'high', 'low', 'open', 'vol', '52high', '52low'];
+            ids.forEach(id => document.getElementById(`stat-${id}`).innerText = "---");
+            
+            const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            
+            try {
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                const quote = JSON.parse(data.contents).quoteResponse.result[0];
+                
+                if(quote) {
+                    currentFetchedPrice = formatCurrency(quote.regularMarketPrice);
+                    document.getElementById('stat-mcap').innerText = formatLargeNumber(quote.marketCap);
+                    document.getElementById('stat-pe').innerText = quote.trailingPE ? quote.trailingPE.toFixed(2) : '-';
+                    document.getElementById('stat-div').innerText = quote.trailingAnnualDividendYield ? (quote.trailingAnnualDividendYield * 100).toFixed(2) + '%' : '-';
+                    document.getElementById('stat-avgvol').innerText = formatLargeNumber(quote.averageDailyVolume3Month);
+                    document.getElementById('stat-high').innerText = formatCurrency(quote.regularMarketDayHigh);
+                    document.getElementById('stat-low').innerText = formatCurrency(quote.regularMarketDayLow);
+                    document.getElementById('stat-open').innerText = formatCurrency(quote.regularMarketOpen);
+                    document.getElementById('stat-vol').innerText = formatLargeNumber(quote.regularMarketVolume);
+                    document.getElementById('stat-52high').innerText = formatCurrency(quote.fiftyTwoWeekHigh);
+                    document.getElementById('stat-52low').innerText = formatCurrency(quote.fiftyTwoWeekLow);
+                    
+                    updateClockAndStatus();
+                }
+            } catch (e) {
+                console.log("Stats fetch error:", e);
+            }
+        }
+
+        function updateClockAndStatus() {
+            const now = new Date();
+            const timeOptions = { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+            document.getElementById('live-clock').innerText = `Time: ${timeString} Central Time`;
+
+            const ctString = now.toLocaleString("en-US", { timeZone: "America/Chicago" });
+            const ctDate = new Date(ctString);
+            const day = ctDate.getDay(); 
+            const hour = ctDate.getHours(); 
+            const minute = ctDate.getMinutes(); 
+            
+            const timeInMinutes = (hour * 60) + minute;
+            const marketOpen = (8 * 60) + 30; // 8:30 AM CT
+            const marketClose = 15 * 60;      // 3:00 PM CT
+            
+            let isMarketOpen = false;
+            if (day !== 0 && day !== 6) {
+                if (timeInMinutes >= marketOpen && timeInMinutes < marketClose) {
+                    isMarketOpen = true;
+                }
+            }
+            
+            const statusEl = document.getElementById('market-status');
+            if (isMarketOpen) {
+                statusEl.innerHTML = `Live Market Tracking <span style="color: #76B900; font-weight: 600;">(Market Open)</span>`;
+            } else {
+                statusEl.innerHTML = `Market Closed <span style="color: #E31937; font-weight: 600;">(At Close: ${currentFetchedPrice})</span>`;
+            }
+        }
+
+        setInterval(updateClockAndStatus, 1000);
+        updateClockAndStatus(); 
+        renderChart();
+        fetchKeyStats(currentTicker);
+        
+    </script>
 </body>
 </html>
