@@ -53,38 +53,28 @@
             font-variant-numeric: tabular-nums;
         }
         
+        /* Complete Unified Styling for every single cell */
+        th, td {
+            padding: 13px 15px;
+            border-bottom: 1px solid #1C1C1E;
+            border-right: 1px solid #1C1C1E;
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
+        
         th {
-            padding: 14px 15px;
             border-bottom: 2px solid #FFFFFF; /* Prominent white line matching screenshot */
             border-right: 1px solid #2C2C2E;
             color: #FFFFFF; font-weight: 700;
             background-color: #000000;
             position: sticky; top: 0; z-index: 10;
-            vertical-align: middle;
-            text-align: center;
-        }
-        
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #1C1C1E;
-            border-right: 1px solid #1C1C1E;
-            vertical-align: middle;
-            text-align: center;
         }
 
         th:last-child, td:last-child { border-right: none; }
         
-        /* Maintain left-alignment for chronological labels while preserving vertical symmetry */
-        th:first-child, td:first-child { 
-            text-align: left; 
-            font-weight: 700; 
-            vertical-align: middle;
-        }
-        
-        td:nth-child(2) { 
-            font-weight: 700; 
-            vertical-align: middle;
-        }
+        /* Bold weightings for labels */
+        th:first-child, td:first-child { font-weight: 700; }
+        td:nth-child(2) { font-weight: 700; }
 
         /* Conditional formatting custom classes */
         .bg-pos { background-color: #c8e6c9 !important; color: #2e7d32 !important; font-weight: 600; }
@@ -191,11 +181,7 @@
                         let tr = document.createElement('tr');
                         let tdDate = document.createElement('td');
                         tdDate.innerText = dateVal;
-                        tdDate.style.fontWeight = '700';
-                        tdDate.style.textAlign = 'left';
-                        tdDate.style.verticalAlign = 'middle';
                         tdDate.style.paddingTop = '20px';
-                        tdDate.style.borderRight = '1px solid #1C1C1E';
                         tr.appendChild(tdDate);
                         
                         // Fill remaining columns with empty grid cells
@@ -216,7 +202,7 @@
                     
                     let tr = document.createElement('tr');
                     
-                    // Explicitly append a blank structural spacer to satisfy the left Date column
+                    // Empty spacer cell under the Date header
                     let tdDateSpacer = document.createElement('td');
                     tdDateSpacer.innerText = "";
                     tr.appendChild(tdDateSpacer); 
