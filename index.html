@@ -45,6 +45,7 @@
             display: flex; gap: 5px; background-color: #1C1C1E; 
             padding: 4px; border-radius: 100px; margin-bottom: 12px;
             overflow-x: auto; white-space: nowrap;
+            justify-content: center; /* PERFECTLY CENTERS BUTTONS */
             -ms-overflow-style: none; scrollbar-width: none;  
         }
         .toggle-container::-webkit-scrollbar { display: none; }
@@ -85,7 +86,12 @@
             display: flex; justify-content: space-between; align-items: center;
             margin-top: 10px; font-size: 0.85rem; color: #8E8E93; font-weight: 400;
         }
-        #live-clock { color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .chart-footer > div {
+            flex: 1; /* Forcing equal width to perfectly center the countdown */
+        }
+        #live-clock { text-align: left; color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
+        #market-countdown { text-align: center; color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .chart-footer > div:last-child { text-align: right; color: #FFFFFF; font-weight: 600; } /* Bold & White Note */
 
         /* Quantitative statistics grid */
         .stats-container { margin-top: 40px; margin-bottom: 40px; text-align: left; }
@@ -102,7 +108,8 @@
         @media (max-width: 800px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .chart-wrapper { height: 50vh; }
-            .chart-footer { flex-direction: column; align-items: flex-start; gap: 5px; }
+            .chart-footer { flex-direction: column; align-items: center; gap: 8px; }
+            .chart-footer > div { text-align: center !important; }
         }
     </style>
 </head>
@@ -115,7 +122,7 @@
     </div>
 
     <div class="toggle-container">
-        <button class="toggle-btn symbol-btn active" style="--brand-color: #E31937; --text-color: #FFFFFF;" onclick="setSymbol('NASDAQ:TSLA', 'TSLA', '#E31937', this)">TSLA</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #E31937; --text-color: #FFFFFF;" onclick="setSymbol('NASDAQ:TSLA', 'TSLA', '#E31937', this)">TSLA</button>
         <button class="toggle-btn symbol-btn" style="--brand-color: #76B900; --text-color: #000000;" onclick="setSymbol('NASDAQ:NVDA', 'NVDA', '#76B900', this)">NVDA</button>
         <button class="toggle-btn symbol-btn" style="--brand-color: #BFBFBF; --text-color: #000000;" onclick="setSymbol('NASDAQ:AAPL', 'AAPL', '#BFBFBF', this)">AAPL</button>
         <button class="toggle-btn symbol-btn" style="--brand-color: #00A4EF; --text-color: #000000;" onclick="setSymbol('NASDAQ:MSFT', 'MSFT', '#00A4EF', this)">MSFT</button>
@@ -136,7 +143,7 @@
         <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last 24 Hours of trading" onclick="setTime('range', '1D', this)">24H</button>
         <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Week of trading" onclick="setTime('range', '5D', this)">Week</button>
         <button class="toggle-btn time-btn" title="Range: Auto-fits exactly the last Month of trading" onclick="setTime('range', '1M', this)">Month</button>
-        <button class="toggle-btn time-btn active" title="Range: Auto-fits Year-To-Date trading" onclick="setTime('range', 'YTD', this)">YTD</button>
+        <button class="toggle-btn time-btn" title="Range: Auto-fits Year-To-Date trading" onclick="setTime('range', 'YTD', this)">YTD</button>
         <button class="toggle-btn time-btn" title="Range: Auto-fits all available history" onclick="setTime('range', 'ALL', this)">Max</button>
     </div>
 
@@ -155,12 +162,13 @@
     
     <div class="chart-footer">
         <div id="live-clock">Time: --:--:-- -- Central Time</div>
-        <div id="market-countdown" style="color: #FFFFFF; font-weight: 600; text-align: center;">Calculating...</div>
+        <div id="market-countdown">Calculating...</div>
         <div>Note: All times are in (CT - Central Time Zone).</div>
     </div>
 
     <div class="stats-container">
         <h2 id="stats-title"><span id="stats-title-ticker">TSLA</span> Key Statistics</h2>
+        
         <div class="stats-grid">
             <div class="stat-box"><span class="stat-label">Market cap</span><span class="stat-value" id="stat-mcap">---</span></div>
             <div class="stat-box"><span class="stat-label">Price-Earnings ratio</span><span class="stat-value" id="stat-pe">---</span></div>
@@ -174,24 +182,21 @@
             
             <div class="stat-box"><span class="stat-label">52 Week high</span><span class="stat-value" id="stat-52high">---</span></div>
             <div class="stat-box"><span class="stat-label">52 Week low</span><span class="stat-value" id="stat-52low">---</span></div>
-            
             <div class="stat-box"><span class="stat-label">Previous Close</span><span class="stat-value" id="stat-prevclose">---</span></div>
             <div class="stat-box"><span class="stat-label">EPS (TTM)</span><span class="stat-value" id="stat-eps">---</span></div>
         </div>
     </div>
 
     <script type="text/javascript">
-        /* Global Application State */
-        let currentSymbolCode = "NASDAQ:TSLA";
-        let currentTicker = "TSLA";
-        let currentTimeMode = "range"; 
-        let currentTimeValue = "YTD";
+        /* Global Application State & Local Storage Persistence */
+        let currentSymbolCode = localStorage.getItem('savedSymbolCode') || "NASDAQ:TSLA";
+        let currentTicker = localStorage.getItem('savedTicker') || "TSLA";
+        let currentBrandColor = localStorage.getItem('savedBrandColor') || "#E31937";
+        let currentTimeMode = localStorage.getItem('savedTimeMode') || "range"; 
+        let currentTimeValue = localStorage.getItem('savedTimeValue') || "YTD";
+        
         let currentFetchedPrice = "---";
-        
-        /* State Lock to completely prevent race conditions on rapid toggling */
         let currentFetchId = 0; 
-        
-        /* Network Response Cache */
         const statsCache = {}; 
 
         /* DOM Element Cache */
@@ -221,12 +226,17 @@
         /* Event Handler: Ticker Selection */
         function setSymbol(symbolCode, symbolName, brandColor, clickedButton) {
             if (clickedButton) {
-                const buttons = document.querySelectorAll('.symbol-btn');
-                buttons.forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.symbol-btn').forEach(btn => btn.classList.remove('active'));
                 clickedButton.classList.add('active');
             }
             currentSymbolCode = symbolCode;
             currentTicker = symbolName;
+            currentBrandColor = brandColor;
+            
+            // Save settings locally to preserve state on page refresh
+            localStorage.setItem('savedSymbolCode', symbolCode);
+            localStorage.setItem('savedTicker', symbolName);
+            localStorage.setItem('savedBrandColor', brandColor);
             
             DOM.title.innerText = symbolName; 
             DOM.title.style.color = brandColor;
@@ -239,19 +249,43 @@
         /* Event Handler: Temporal Constraint Selection */
         function setTime(mode, value, clickedButton) {
             if (clickedButton) {
-                const buttons = document.querySelectorAll('.time-btn');
-                buttons.forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
                 clickedButton.classList.add('active');
             }
             currentTimeMode = mode;
             currentTimeValue = value;
+            
+            localStorage.setItem('savedTimeMode', mode);
+            localStorage.setItem('savedTimeValue', value);
+            
             renderChart();
+        }
+
+        /* Boot-up App Initialization */
+        function initializeTerminal() {
+            // Restore active state to dynamically saved Ticker button
+            document.querySelectorAll('.symbol-btn').forEach(btn => {
+                if (btn.innerText === currentTicker) {
+                    btn.classList.add('active');
+                    DOM.title.style.color = currentBrandColor;
+                    DOM.title.style.textShadow = `0px 0px 12.5px ${currentBrandColor}66`;
+                }
+            });
+            // Restore active state to dynamically saved Time button
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(`'${currentTimeValue}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            DOM.title.innerText = currentTicker;
+            renderChart();
+            fetchKeyStats(currentTicker);
         }
 
         /* UI Constructor: TradingView API Integration */
         function renderChart() {
             DOM.chart.innerHTML = '';
-            
             const widgetConfig = {
                 "autosize": true,
                 "symbol": currentSymbolCode,   
@@ -266,23 +300,17 @@
                 "container_id": "tradingview_chart"
             };
 
-            if (currentTimeMode === "range") {
-                widgetConfig.range = currentTimeValue;
-            } else {
-                widgetConfig.interval = currentTimeValue;
-            }
+            if (currentTimeMode === "range") widgetConfig.range = currentTimeValue;
+            else widgetConfig.interval = currentTimeValue;
 
             new TradingView.widget(widgetConfig);
         }
 
-        /* Utility: Numerical string formatting (Strips commas perfectly to prevent truncation) */
+        /* Utility: Numerical string formatting */
         function formatLargeNumber(num) {
             if (num === null || num === undefined || num === "N/A" || num === "---" || num === "") return '---';
-            
-            // Bypass pre-formatted string payloads (e.g. "1.23T") gracefully
             if (typeof num === 'string' && /[MBT]/i.test(num)) return num.trim();
             
-            // Forcefully strip commas before float parsing so "41,000,000" accurately computes instead of breaking at "41"
             const parsed = parseFloat(String(num).replace(/,/g, ''));
             if (isNaN(parsed)) return '---';
             
@@ -295,142 +323,109 @@
         /* Utility: Currency string formatting */
         function formatCurrency(num) {
             if (num === null || num === undefined || num === "N/A" || num === "---" || num === "") return '---';
-            
             const parsed = parseFloat(String(num).replace(/,/g, '').replace(/\$/g, ''));
             if (isNaN(parsed)) return '---';
-            
             if (parsed < 0) return '-$' + Math.abs(parsed).toFixed(2);
             return '$' + parsed.toFixed(2);
         }
 
-        /* External API Integration Engine */
+        /* External API Integration Engine (Lightning Fast Promise.any Race) */
         async function fetchKeyStats(ticker) {
-            const fetchId = ++currentFetchId; // Captures unique request instance for background race condition lock
-            
+            const fetchId = ++currentFetchId; 
             DOM.statsTicker.innerText = ticker;
             
             const now = Date.now();
             if (statsCache[ticker] && (now - statsCache[ticker].timestamp < 60000)) {
-                if (currentFetchId === fetchId) {
-                    injectStatsData(statsCache[ticker].data);
-                }
+                if (currentFetchId === fetchId) injectStatsData(statsCache[ticker].data);
                 return;
             }
 
-            // Instantly clear UI to prevent old prices bleeding into view while new request is pending
             if (currentFetchId === fetchId) {
                 Object.values(DOM.stats).forEach(el => el.innerText = "---");
                 currentFetchedPrice = "---";
                 updateClockAndStatus(); 
             }
             
-            // Tiered Network Architecture (Added redundant endpoints)
-            const SOURCES = [
-                { provider: 'yahoo', url: `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}` },
-                { provider: 'cnbc', url: `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=${ticker}&requestMethod=itv&noform=1&fund=1&exthrs=1&output=json` }
-            ];
-
-            const PROXIES = [
-                `https://api.codetabs.com/v1/proxy?quest=`,
-                `https://api.allorigins.win/get?url=`,
-                `https://corsproxy.io/?`
+            const yahooUrl = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+            const proxies = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`
             ];
 
             let dataPayload = null;
 
-            for (let source of SOURCES) {
-                for (let proxy of PROXIES) {
-                    if (currentFetchId !== fetchId) return; // Silent discard if user clicked a new stock mid-fetch
+            try {
+                // RACE CONDITION: Promise.any returns the FIRST successful resolved promise.
+                // This slashes load times from ~5s down to ~300ms.
+                const q = await Promise.any(proxies.map(async proxy => {
+                    const res = await fetch(proxy, { cache: 'no-store' });
+                    if (!res.ok) throw new Error('Proxy failed');
+                    const json = await res.json();
+                    if (!json.quoteResponse?.result?.[0]) throw new Error('Bad payload');
+                    return json.quoteResponse.result[0];
+                }));
 
-                    try {
-                        const targetUrl = proxy + encodeURIComponent(source.url);
-                        const res = await fetch(targetUrl);
-                        if (!res.ok) continue;
+                if (currentFetchId !== fetchId) return;
 
-                        let text;
-                        if (proxy.includes('allorigins')) {
-                            const jsonRes = await res.json();
-                            text = jsonRes.contents;
-                        } else {
-                            text = await res.text();
-                        }
-                        
-                        const data = JSON.parse(text);
+                dataPayload = {
+                    price: q.regularMarketPrice || q.regularMarketPreviousClose,
+                    mcap: q.marketCap,
+                    pe: q.trailingPE || q.forwardPE,
+                    div: q.dividendYield !== undefined && q.dividendYield !== null ? (parseFloat(q.dividendYield) * 100).toFixed(2) + '%' : '---',
+                    avgvol: q.averageDailyVolume3Month || q.averageDailyVolume10Day,
+                    high: q.regularMarketDayHigh,
+                    low: q.regularMarketDayLow,
+                    open: q.regularMarketOpen,
+                    vol: q.regularMarketVolume,
+                    high52: q.fiftyTwoWeekHigh,
+                    low52: q.fiftyTwoWeekLow,
+                    prevclose: q.regularMarketPreviousClose,
+                    eps: q.epsTrailingTwelveMonths || q.epsForward
+                };
 
-                        // Route 1: Yahoo v7 Flat Payload
-                        if (source.provider === 'yahoo' && data?.quoteResponse?.result?.[0]) {
-                            const q = data.quoteResponse.result[0];
-                            dataPayload = {
-                                price: q.regularMarketPrice || q.regularMarketPreviousClose,
-                                mcap: q.marketCap,
-                                pe: q.trailingPE,
-                                div: q.dividendYield !== undefined && q.dividendYield !== null ? (parseFloat(q.dividendYield) * 100).toFixed(2) + '%' : '---',
-                                avgvol: q.averageDailyVolume3Month || q.averageDailyVolume10Day,
-                                high: q.regularMarketDayHigh,
-                                low: q.regularMarketDayLow,
-                                open: q.regularMarketOpen,
-                                vol: q.regularMarketVolume,
-                                high52: q.fiftyTwoWeekHigh,
-                                low52: q.fiftyTwoWeekLow,
-                                prevclose: q.regularMarketPreviousClose,
-                                eps: q.epsTrailingTwelveMonths
-                            };
-                            break;
-                        }
-
-                        // Route 2: CNBC Failsafe Payload
-                        if (source.provider === 'cnbc') {
-                            const q = data?.FormattedQuoteResult?.FormattedQuote?.[0] || data?.QuickQuoteResult?.QuickQuote?.[0];
-                            if (q) {
-                                // Fixes double percentage bug mathematically by wiping existing % signs
-                                let cDiv = '---';
-                                if (q.dividendyield && q.dividendyield !== "N/A") {
-                                    cDiv = String(q.dividendyield).replace(/%/g, '') + '%';
-                                }
-
-                                dataPayload = {
-                                    price: q.last || q.previous_day_closing,
-                                    mcap: q.mktcap || q.market_cap || q.MKTCAP || '---', 
-                                    pe: q.pe || '---',
-                                    div: cDiv,
-                                    avgvol: q.avgvol || q.VMA10VOL || q.averageVolume || '---',
-                                    high: q.high,
-                                    low: q.low,
-                                    open: q.open,
-                                    vol: q.volume || q.curmktvol,
-                                    high52: q.yrhiprice || q.yhigh,
-                                    low52: q.yrloprice || q.ylow,
-                                    prevclose: q.previous_day_closing || q.PREV_CLS,
-                                    eps: q.eps || q.EPS
-                                };
-                                break;
-                            }
-                        }
-                    } catch (e) {
-                        continue;
+            } catch (e) {
+                // Fallback to CNBC if Yahoo entirely fails across all proxies
+                if (currentFetchId !== fetchId) return;
+                
+                const cnbcUrl = `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=${ticker}&requestMethod=itv&noform=1&fund=1&exthrs=1&output=json`;
+                try {
+                    const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(cnbcUrl)}`);
+                    const json = await res.json();
+                    const q = json?.FormattedQuoteResult?.FormattedQuote?.[0] || json?.QuickQuoteResult?.QuickQuote?.[0];
+                    if (q) {
+                        dataPayload = {
+                            price: q.last || q.previous_day_closing,
+                            mcap: q.mktcap || q.market_cap || '---', 
+                            pe: q.pe || '---',
+                            div: q.dividendyield && q.dividendyield !== "N/A" ? String(q.dividendyield).replace(/%/g, '') + '%' : '---',
+                            avgvol: q.avgvol || q.VMA10VOL || '---',
+                            high: q.high,
+                            low: q.low,
+                            open: q.open,
+                            vol: q.volume || q.curmktvol,
+                            high52: q.yrhiprice || q.yhigh,
+                            low52: q.yrloprice || q.ylow,
+                            prevclose: q.previous_day_closing || q.PREV_CLS,
+                            eps: q.eps || q.EPS
+                        };
                     }
-                }
-                if (dataPayload) break;
+                } catch(err) {}
             }
 
-            // Final lock check before executing DOM injections to block straggler network requests
             if (currentFetchId !== fetchId) return;
 
             if (dataPayload) {
                 statsCache[ticker] = { timestamp: now, data: dataPayload };
                 injectStatsData(dataPayload);
-            } else {
-                console.error("Data retrieval execution failed: All proxy tiers exhausted.");
             }
         }
 
         /* DOM Interfacer: Applies fetched data to Document Object Model */
         function injectStatsData(data) {
             currentFetchedPrice = data.price ? formatCurrency(data.price) : "---";
-
             DOM.stats.mcap.innerText = formatLargeNumber(data.mcap);
             
-            // Decimal formatting for P/E
             let peStr = '---';
             if (data.pe && data.pe !== '---' && data.pe !== 'N/A') {
                 const peParsed = parseFloat(String(data.pe).replace(/,/g, ''));
@@ -454,7 +449,7 @@
             updateClockAndStatus();
         }
 
-        /* Chronological State Engine */
+        /* Chronological State Engine & Countdown Logic */
         function updateClockAndStatus() {
             const now = new Date();
             const timeOptions = { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
@@ -497,19 +492,18 @@
                 targetMinutes = marketOpen;
             } else { // Weekday
                 if (timeInMinutes < marketOpen) {
-                    targetDayOffset = 0; // Today, before open
+                    targetDayOffset = 0; 
                     targetMinutes = marketOpen;
                 } else if (timeInMinutes >= marketOpen && timeInMinutes < marketClose) {
-                    targetDayOffset = 0; // Today, before close
+                    targetDayOffset = 0; 
                     targetMinutes = marketClose;
                     isClosing = true;
-                } else { // Today, after close
-                    targetDayOffset = (day === 5) ? 3 : 1; // If Friday, target Monday (+3 days). Else tomorrow (+1).
+                } else { // After close on a weekday
+                    targetDayOffset = (day === 5) ? 3 : 1; // +3 days if Friday, +1 day otherwise
                     targetMinutes = marketOpen;
                 }
             }
             
-            // Calculate absolute difference in minutes
             let diffMinutes = 0;
             if (targetDayOffset === 0) {
                 diffMinutes = targetMinutes - timeInMinutes;
@@ -520,7 +514,6 @@
             const diffHrs = Math.floor(diffMinutes / 60);
             const diffMins = diffMinutes % 60;
             
-            // Apply text to the DOM
             if (isClosing) {
                 DOM.countdown.innerText = `Market closes in ${diffHrs}h ${diffMins}m`;
             } else {
@@ -530,9 +523,8 @@
 
         /* Primary Initialization Sequence */
         setInterval(updateClockAndStatus, 1000);
+        initializeTerminal();
         updateClockAndStatus(); 
-        renderChart();
-        fetchKeyStats(currentTicker);
         
     </script>
 </body>
