@@ -280,8 +280,11 @@
             }
         }
         
-        // Boot-up Execution
+        // Initial instant execution on page load
         loadData();
+
+        // Background Refresh Engine: Fires automatically every 60 seconds (60,000 ms)
+        setInterval(loadData, 60000);
     </script>
 </body>
 </html>
