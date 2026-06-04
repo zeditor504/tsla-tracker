@@ -239,10 +239,15 @@
                     tdCost.innerText = cost;
                     tr.appendChild(tdCost);
                     
-                    // Column 8: Expected Profit (Gold coloring)
+                    // Column 8: Expected Profit (Conditional Gold coloring for > $1000)
                     let tdProf = document.createElement('td');
                     tdProf.innerText = profit;
-                    tdProf.className = 'bg-gold';
+                    
+                    // Cleanse currency formatting strings to evaluate the raw numerical size
+                    let numericProfit = parseFloat(profit.replace(/[$\s,]/g, ''));
+                    if (!isNaN(numericProfit) && numericProfit > 1000) {
+                        tdProf.className = 'bg-gold';
+                    }
                     tr.appendChild(tdProf);
                     
                     // Column 9: Upside Potential Dynamic Heatmap Engine
