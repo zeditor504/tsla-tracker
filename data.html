@@ -25,7 +25,24 @@
             flex-shrink: 0; margin-bottom: 25px; margin-top: 10px;
         }
         
-        .header h1 { margin: 0; font-size: 1.8rem; font-weight: 600; color: #FFFFFF; letter-spacing: -0.5px; }
+        /* Light gray to white shifting gradient text effect */
+        .header h1 { 
+            margin: 0; 
+            font-size: 1.8rem; 
+            font-weight: 600; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(120deg, #8E8E93, #FFFFFF, #8E8E93, #FFFFFF);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerFlow 8s ease infinite;
+        }
+
+        @keyframes shimmerFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
         
         /* Navigation routing button */
         .nav-btn {
@@ -166,11 +183,8 @@
                     const dateVal = row[0] ? row[0].replace(/^'/, '').trim() : "";
                     const symbol = row[1] ? row[1].replace(/^'/, '').trim() : "";
                     
-                    // Render completely blank operational buffer rows to retain gridlines
+                    // Filter out completely blank operational buffer rows to collapse the layout safely
                     if (!dateVal && !symbol) {
-                        let tr = document.createElement('tr');
-                        for(let j=0; j<9; j++) tr.appendChild(document.createElement('td'));
-                        tbody.appendChild(tr);
                         continue;
                     }
 
