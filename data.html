@@ -60,7 +60,6 @@
             color: #FFFFFF; font-weight: 700;
             background-color: #000000;
             position: sticky; top: 0; z-index: 10;
-            /* Enforce vertical and horizontal alignment */
             vertical-align: middle;
             text-align: center;
         }
@@ -69,14 +68,13 @@
             padding: 12px 15px;
             border-bottom: 1px solid #1C1C1E;
             border-right: 1px solid #1C1C1E;
-            /* Enforce strict vertical and horizontal centering */
             vertical-align: middle;
             text-align: center;
         }
 
         th:last-child, td:last-child { border-right: none; }
         
-        /* Maintain necessary left alignment for chronological layouts while keeping vertical alignment uniform */
+        /* Maintain left-alignment for chronological labels while preserving vertical symmetry */
         th:first-child, td:first-child { 
             text-align: left; 
             font-weight: 700; 
@@ -218,8 +216,10 @@
                     
                     let tr = document.createElement('tr');
                     
-                    // Column 0: Empty buffer beneath Date
-                    tr.appendChild(document.createElement('td')); 
+                    // Explicitly append a blank structural spacer to satisfy the left Date column
+                    let tdDateSpacer = document.createElement('td');
+                    tdDateSpacer.innerText = "";
+                    tr.appendChild(tdDateSpacer); 
                     
                     // Column 1: Stock Symbol Colors
                     let tdSym = document.createElement('td');
@@ -260,7 +260,6 @@
                     let tdProf = document.createElement('td');
                     tdProf.innerText = profit;
                     
-                    // Cleanse currency formatting strings to evaluate the raw numerical size
                     let numericProfit = parseFloat(profit.replace(/[$\s,]/g, ''));
                     if (!isNaN(numericProfit) && numericProfit > 1000) {
                         tdProf.className = 'bg-gold';
@@ -272,7 +271,6 @@
                     tdUp.innerText = upside;
                     let num = parseFloat(upside.replace('%',''));
                     if (!isNaN(num)) {
-                        // Dynamically scales green opacity from 0% upside up to a 30% upside ceiling
                         let opacity = Math.min(num / 30, 1);
                         tdUp.style.backgroundColor = `rgba(87, 187, 138, ${opacity})`;
                         tdUp.style.color = '#FFFFFF';
