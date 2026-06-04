@@ -73,7 +73,7 @@
         th:last-child, td:last-child { border-right: none; }
         
         /* Bold weightings for labels */
-        th:first-child, td:first-child { font-weight: 700; }
+        th:first-child { font-weight: 700; }
         td:nth-child(2) { font-weight: 700; }
 
         /* Conditional formatting custom classes */
@@ -176,19 +176,23 @@
                         continue;
                     }
 
-                    // Render chronological Date separator rows
+                    // Render chronological Date separator rows (Fully merged and centered banner)
                     if (dateVal && !symbol) {
                         let tr = document.createElement('tr');
                         let tdDate = document.createElement('td');
-                        tdDate.innerText = dateVal;
                         
-                        // Enforce pristine vertical centering while providing tracking headroom via line-height
-                        tdDate.style.lineHeight = '2.5rem';
+                        tdDate.innerText = dateVal;
+                        tdDate.colSpan = "10"; // Merge across all 10 table columns
+                        
+                        // Enhanced typography and structural styling
+                        tdDate.style.fontWeight = '700';
+                        tdDate.style.fontSize = '1.15rem';
+                        tdDate.style.letterSpacing = '0.5px';
+                        tdDate.style.lineHeight = '2.8rem';
+                        tdDate.style.backgroundColor = '#1C1C1E'; // Sleek dark gray row background
+                        tdDate.style.borderRight = 'none';
                         
                         tr.appendChild(tdDate);
-                        
-                        // Fill remaining columns with empty grid cells
-                        for(let j=1; j<10; j++) tr.appendChild(document.createElement('td'));
                         tbody.appendChild(tr);
                         continue;
                     }
