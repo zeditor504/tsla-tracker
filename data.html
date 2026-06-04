@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>At Close Database | Live Market Terminal</title>
+    <title>Quantitative Market Ledger | Live Market Terminal</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
+        /* Base document properties */
         body {
             margin: 0; padding: 0; background-color: #000000;
             font-family: 'Inter Tight', sans-serif; color: #FFFFFF;
@@ -17,6 +18,7 @@
             align-items: center;
         }
         
+        /* Header layout and typography */
         .header { 
             text-align: center; width: 100%; height: 80px;
             display: flex; justify-content: center; align-items: center; position: relative;
@@ -25,6 +27,7 @@
         
         .header h1 { margin: 0; font-size: 1.8rem; font-weight: 600; color: #FFFFFF; letter-spacing: -0.5px; }
         
+        /* Navigation routing button */
         .nav-btn {
             position: absolute; left: 20px;
             background-color: #1C1C1E; color: #8E8E93; text-decoration: none;
@@ -34,16 +37,16 @@
         
         .nav-btn:hover { color: #FFFFFF; background-color: #3A3A3C; }
         
-        /* The Responsive Viewport Squeeze */
+        /* Defines viewport meta tag for responsive design */
         .iframe-container {
-            flex-grow: 1; /* Automatically consumes exactly the remaining height of the screen */
+            flex-grow: 1; 
             width: 100vw; 
             background-color: #000000;
             overflow: hidden; 
             position: relative;
         }
         
-        /* The Negative Margin Hack: Pushes Google's white scrollbars completely off the screen! */
+        /* Applies negative spatial margins to obscure native iframe UI and borders */
         iframe { 
             position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
             width: calc(100% + 10px); height: calc(100% + 10px); 
@@ -55,7 +58,7 @@
 
     <div class="header">
         <a href="index.html" class="nav-btn">◀ Back to Charts</a>
-        <h1>At Close Database</h1>
+        <h1>Quantitative Market Ledger</h1>
     </div>
 
     <div class="iframe-container">
