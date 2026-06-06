@@ -89,8 +89,13 @@
         .chart-footer > div {
             flex: 1; /* Forcing equal width to perfectly center the countdown */
         }
+        
+        /* Live clock requires tabular numbers so it doesn't vibrate every second */
         #live-clock { text-align: left; color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
-        #market-countdown { text-align: center; color: #FFFFFF; font-weight: 600; font-variant-numeric: tabular-nums; }
+        
+        /* Countdown has tabular numbers removed for natural kerning on digits like "11" */
+        #market-countdown { text-align: center; color: #FFFFFF; font-weight: 600; } 
+        
         .chart-footer > div:last-child { text-align: right; color: #FFFFFF; font-weight: 600; } /* Bold & White Note */
 
         /* Mobile responsive adjustments */
@@ -277,7 +282,6 @@
             }
             
             if (isMarketOpen) {
-                // Applied the rich Emerald Green (#28C76F) here
                 DOM.status.innerHTML = `Live Tracking <span style="color: #28C76F; font-weight: 600;">(Market Open)</span>`;
             } else {
                 DOM.status.innerHTML = `Live Tracking <span style="color: #BFBFBF; font-weight: 600;">(Market Closed)</span>`;
