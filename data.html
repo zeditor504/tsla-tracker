@@ -55,6 +55,16 @@
         .filter-status {
             position: absolute; right: 0;
             color: #FFFFFF; font-weight: 600; font-size: 0.95rem;
+            text-align: right;
+        }
+        
+        /* Secondary Sorting Direction Text */
+        .filter-direction {
+            display: block;
+            font-size: 0.8rem;
+            color: #8E8E93;
+            font-weight: 400;
+            margin-top: 2px;
         }
         
         /* Native Data Table Styling */
@@ -151,7 +161,10 @@
     <div class="header">
         <a href="index.html" class="nav-btn">◀ Back to Charts</a>
         <h1>At Close History</h1>
-        <div id="filter-status" class="filter-status">Filtering By: Upside Potential (Default)</div>
+        <div id="filter-status" class="filter-status">
+            Filtering By: Upside Potential (Default)
+            <span class="filter-direction">High to Low</span>
+        </div>
     </div>
 
     <div id="loading">Connecting to Database natively...</div>
@@ -188,8 +201,8 @@
         const COLUMN_NAMES = {
             'symbol': 'Stock Symbol',
             'price': 'Closing Price',
-            'chgPct': 'Change over Yesterday',
-            'high52': '52 Week High',
+            'chgPct': 'Change over Yesterday (% Change)',
+            'high52': '52 Week High (USD)',
             'cost': 'Cost of 25 shares',
             'profit': 'Expected Profit',
             'upside': 'Upside Potential'
@@ -355,12 +368,18 @@
                 }
             }
             
-            // Dynamically manage the "Filtering By:" text
+            // Dynamically manage the "Filtering By:" text and sub-text direction
             const statusEl = document.getElementById('filter-status');
+            
+            let dirText = currentSort.direction === 'desc' ? 'High to Low' : 'Low to High';
+            if (currentSort.column === 'symbol') {
+                dirText = currentSort.direction === 'desc' ? 'Z to A' : 'A to Z';
+            }
+
             if (currentSort.column === 'upside' && currentSort.direction === 'desc') {
-                statusEl.innerText = "Filtering By: Upside Potential (Default)";
+                statusEl.innerHTML = `Filtering By: Upside Potential (Default)<br><span class="filter-direction">${dirText}</span>`;
             } else {
-                statusEl.innerText = `Filtering By: ${COLUMN_NAMES[currentSort.column]}`;
+                statusEl.innerHTML = `Filtering By: ${COLUMN_NAMES[currentSort.column]}<br><span class="filter-direction">${dirText}</span>`;
             }
         }
 
