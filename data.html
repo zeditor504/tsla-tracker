@@ -397,7 +397,12 @@
                 let trDate = document.createElement('tr');
                 let tdDate = document.createElement('td');
                 
-                tdDate.innerText = group.date;
+                // Dynamically calculate the Day of the Week
+                let dateObj = new Date(group.date);
+                let dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                
+                // Format: "Friday, 06/05/2026"
+                tdDate.innerText = `${dayName}, ${group.date}`;
                 tdDate.colSpan = "9";
                 tdDate.style.fontWeight = '700';
                 tdDate.style.fontSize = '1.15rem';
