@@ -372,8 +372,12 @@
             const statusEl = document.getElementById('filter-status');
             
             let dirText = currentSort.direction === 'desc' ? 'High to Low' : 'Low to High';
+            
+            // Apply specific directional phrasing based on the column context
             if (currentSort.column === 'symbol') {
                 dirText = currentSort.direction === 'desc' ? 'Z to A' : 'A to Z';
+            } else if (currentSort.column === 'chgPct') {
+                dirText = currentSort.direction === 'desc' ? 'Greatest to Least' : 'Least to Greatest';
             }
 
             if (currentSort.column === 'upside' && currentSort.direction === 'desc') {
