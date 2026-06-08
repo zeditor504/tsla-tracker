@@ -115,13 +115,13 @@
     </div>
 
     <div class="toggle-container">
-        <button class="toggle-btn symbol-btn" style="--brand-color: #E31937; --text-color: #FFFFFF;" onclick="setSymbol('BATS:TSLA', 'TSLA', '#E31937', this)">TSLA</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #76B900; --text-color: #000000;" onclick="setSymbol('BATS:NVDA', 'NVDA', '#76B900', this)">NVDA</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #BFBFBF; --text-color: #000000;" onclick="setSymbol('BATS:AAPL', 'AAPL', '#BFBFBF', this)">AAPL</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #00A4EF; --text-color: #000000;" onclick="setSymbol('BATS:MSFT', 'MSFT', '#00A4EF', this)">MSFT</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #FF9900; --text-color: #000000;" onclick="setSymbol('BATS:AMZN', 'AMZN', '#FF9900', this)">AMZN</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #4285F4; --text-color: #FFFFFF;" onclick="setSymbol('BATS:GOOG', 'GOOG', '#4285F4', this)">GOOG</button>
-        <button class="toggle-btn symbol-btn" style="--brand-color: #0668E1; --text-color: #FFFFFF;" onclick="setSymbol('BATS:META', 'META', '#0668E1', this)">META</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #E31937; --text-color: #FFFFFF;" onclick="setSymbol('TSLA', 'TSLA', '#E31937', this)">TSLA</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #76B900; --text-color: #000000;" onclick="setSymbol('NVDA', 'NVDA', '#76B900', this)">NVDA</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #BFBFBF; --text-color: #000000;" onclick="setSymbol('AAPL', 'AAPL', '#BFBFBF', this)">AAPL</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #00A4EF; --text-color: #000000;" onclick="setSymbol('MSFT', 'MSFT', '#00A4EF', this)">MSFT</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #FF9900; --text-color: #000000;" onclick="setSymbol('AMZN', 'AMZN', '#FF9900', this)">AMZN</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #4285F4; --text-color: #FFFFFF;" onclick="setSymbol('GOOG', 'GOOG', '#4285F4', this)">GOOG</button>
+        <button class="toggle-btn symbol-btn" style="--brand-color: #0668E1; --text-color: #FFFFFF;" onclick="setSymbol('META', 'META', '#0668E1', this)">META</button>
     </div>
 
     <div class="toggle-container">
@@ -161,7 +161,7 @@
 
     <script type="text/javascript">
         /* Global Application State & Local Storage Persistence */
-        let currentSymbolCode = localStorage.getItem('savedSymbolCode') || "BATS:TSLA";
+        let currentSymbolCode = localStorage.getItem('savedSymbolCode') || "TSLA";
         let currentTicker = localStorage.getItem('savedTicker') || "TSLA";
         let currentBrandColor = localStorage.getItem('savedBrandColor') || "#E31937";
         let currentTimeMode = localStorage.getItem('savedTimeMode') || "range"; 
