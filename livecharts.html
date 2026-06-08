@@ -331,9 +331,12 @@
             // Construct the display string dynamically
             let timeString = "";
             if (diffDays > 0) {
-                timeString += `${diffDays}d `;
+                timeString = `${diffDays}d ${remainingHrs}h`;
+            } else if (remainingHrs > 0) {
+                timeString = `${remainingHrs}h ${diffMins}m`;
+            } else {
+                timeString = `${diffMins}m`;
             }
-            timeString += `${remainingHrs}h ${diffMins}m`;
             
             if (isClosing) {
                 DOM.countdown.innerText = `Market closes in ${timeString}`;
