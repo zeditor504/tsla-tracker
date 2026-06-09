@@ -75,6 +75,29 @@ def fetch_ticker_data(ticker):
     except Exception as e:
         return None, f"  [X] Data processing exception encountered for {ticker}: {e}"
 
+def fetch_intraday_data(ticker):
+    """
+    Isolated worker to fetch 1-minute interval data for the current trading day.
+    Designed for the Path A Custom Chart Engine.
+    """
+    try:
+        stock = yf.Ticker(ticker)
+        # Fetch 1-minute intraday data for the most recent trading day
+        hist = stock.history(period="1d", interval="1m", auto_adjust=False)
+        hist = hist.dropna(subset=['Close'])
+        
+        rows = []
+        for timestamp, row in hist.iterrows():
+            # Extract clean string timestamp and precise close price for the JS engine
+            dt_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            price = round(float(row['Close']), 2)
+            rows.append([dt_str, ticker, price])
+            
+        return rows, None
+        
+    except Exception as e:
+        return None, f"  [X] Intraday data failure for {ticker}: {e}"
+
 def main():
     try:
         print("Authenticating with Google Cloud...")
@@ -170,6 +193,33 @@ def main():
         # Execute insertion operation at chronological vertex (Row 2)
         sheet.insert_rows(final_batch, 2, value_input_option='USER_ENTERED')
         print("✅ Success! Your Google Sheet has been updated.")
+
+        # ==========================================
+        # INTRADAY 1-MINUTE DATA PIPELINE (PATH A)
+        # ==========================================
+        print("\nInitiating Intraday 1-Minute Data Pipeline...")
+        intraday_sheet = client.open("Daily Market Data").worksheet("Intraday")
+        
+        intraday_rows = [["Datetime", "Symbol", "Price"]]
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(tickers)) as executor:
+            future_to_ticker = {executor.submit(fetch_intraday_data, ticker): ticker for ticker in tickers}
+            
+            for future in concurrent.futures.as_completed(future_to_ticker):
+                rows, error_msg = future.result()
+                if rows:
+                    intraday_rows.extend(rows)
+                else:
+                    print(error_msg)
+                    
+        if len(intraday_rows) > 1:
+            print("Clearing historical intraday data...")
+            intraday_sheet.clear()
+            print("Pushing new intraday coordinates...")
+            intraday_sheet.update(values=intraday_rows, range_name='A1')
+            print("✅ Success! Intraday Database updated.")
+        else:
+            print("[!] Warning: No intraday data collected.")
 
     except Exception as e:
         # Master error catcher prevents silent terminal exits
