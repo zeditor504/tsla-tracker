@@ -189,7 +189,8 @@
                     <th class="sortable" id="th-symbol" onclick="handleSort('symbol')">Stock Symbol <span class="sort-icon" id="sort-symbol">↕</span></th>
                     <th class="sortable" id="th-price" onclick="handleSort('price')">Closing Price <span class="sort-icon" id="sort-price">↕</span></th>
                     <th colspan="2" class="sortable" id="th-chgPct" onclick="handleSort('chgPct')" title="Sorts by Percentage Change">Change over Yesterday <span class="sort-icon" id="sort-chgPct">↕</span></th>
-                    <th colspan="2" class="sortable" id="th-high52" onclick="handleSort('high52')" title="Sorts by Peak Price">52 Week High <span class="sort-icon" id="sort-high52">↕</span></th>
+                    <th class="sortable" id="th-high52" onclick="handleSort('high52')" title="Sorts by Peak Price">52 Week High <span class="sort-icon" id="sort-high52">↕</span></th>
+                    <th class="sortable" id="th-highDate" onclick="handleSort('highDate')" title="Sorts by Peak Date">Peak Date <span class="sort-icon" id="sort-highDate">↕</span></th>
                     <th class="sortable" id="th-cost" onclick="handleSort('cost')">Cost of 25 shares <span class="sort-icon" id="sort-cost">↕</span></th>
                     <th class="sortable" id="th-profit" onclick="handleSort('profit')">Expected Profit <span class="sort-icon" id="sort-profit">↕</span></th>
                     <th class="sortable active-sort" id="th-upside" onclick="handleSort('upside')">Upside Potential <span class="sort-icon active" id="sort-upside">▼</span></th>
@@ -216,6 +217,7 @@
             'price': 'Closing Price',
             'chgPct': 'Change over Yesterday',
             'high52': '52 Week High',
+            'highDate': '52 Week Peak Date',
             'cost': 'Cost of 25 shares',
             'profit': 'Expected Profit',
             'upside': 'Upside Potential'
@@ -299,6 +301,7 @@
                             high52Str: row[5] ? row[5].replace(/^'/, '').trim() : "",
                             num_high52: cleanNumeric(row[5]),
                             highDateStr: row[6] ? row[6].replace(/^'/, '').trim() : "",
+                            num_highDate: row[6] ? new Date(row[6].replace(/^'/, '').trim()).getTime() : 0,
                             costStr: row[7] ? row[7].replace(/^'/, '').trim() : "",
                             num_cost: cleanNumeric(row[7]),
                             profitStr: row[8] ? row[8].replace(/^'/, '').trim() : "",
@@ -391,6 +394,8 @@
                 dirText = currentSort.direction === 'desc' ? 'Z to A' : 'A to Z';
             } else if (currentSort.column === 'chgPct') {
                 dirText = currentSort.direction === 'desc' ? 'Top Gainers to Top Losers' : 'Top Losers to Top Gainers';
+            } else if (currentSort.column === 'highDate') {
+                dirText = currentSort.direction === 'desc' ? 'Latest to Oldest' : 'Oldest to Latest';
             }
 
             // Dynamically show or hide the Reset button
