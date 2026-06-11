@@ -12,6 +12,14 @@ on:
 jobs:
   update-sheets:
     runs-on: ubuntu-latest
+    
+    # Forces the GitHub Runner to use the new Node 24 infrastructure
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
     steps:
       - name: Checkout Repository
