@@ -2,40 +2,15 @@ name: Daily At-Close Database Update
 
 on:
   schedule:
-    # Triggers twice daily at off-peak minutes to avoid GitHub server throttling
-    # 20:18 UTC (3:18 PM CDT) and 21:18 UTC (3:18 PM CST) Monday-Friday
-    - cron: '18 20,21 * * 1-5'
+    # Triggers once daily at 21:30 UTC Monday-Friday
+    # (4:30 PM CDT in Summer / 3:30 PM CST in Winter)
+    - cron: '30 21 * * 1-5'
   
   # Keeps the manual "Run workflow" button active for testing
   workflow_dispatch: 
 
 jobs:
-  # JOB 1: DST Time Controller
-  check-time:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.timecheck.outputs.should_run }}
-    steps:
-      - name: Verify Local Central Time
-        id: timecheck
-        run: |
-          # Fetch the current hour in Central Time
-          HOUR=$(TZ='America/Chicago' date +%H)
-          echo "Current Central Time hour is: $HOUR"
-          
-          # If it is 3 PM CT (hour 15) OR if the user manually clicked "Run Workflow", authorize the bot
-          if [ "$HOUR" == "15" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "It is time to run the market update!"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Wrong hour due to Daylight Saving Time offsets. Aborting run."
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  # JOB 2: The actual Python Execution (Only runs if Job 1 gives permission)
   update-sheets:
-    needs: check-time
-    if: needs.check-time.outputs.should_run == 'true'
     runs-on: ubuntu-latest
 
     steps:
