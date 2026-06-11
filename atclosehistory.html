@@ -422,6 +422,17 @@
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
             
+            // --- DYNAMIC EMERALD PROFIT SCALE: MIN/MAX CALCULATION ---
+            // Calculate the highest and lowest profit values across all visible data
+            const allProfitValues = [];
+            marketData.forEach(group => {
+                group.rows.forEach(row => {
+                    allProfitValues.push(row.num_profit);
+                });
+            });
+            const maxProfit = Math.max(...allProfitValues);
+            const minProfit = Math.min(...allProfitValues);
+            
             marketData.forEach(group => {
                 // 1. Render the Chronological Date Group Separator
                 let trDate = document.createElement('tr');
@@ -481,10 +492,24 @@
                     tdCost.innerText = r.costStr;
                     tr.appendChild(tdCost);
                     
-                    // Conditionally mapped Gold text using the background numerical data
+                    // --- DYNAMIC EMERALD PROFIT SCALE: ROW RENDERER ---
                     let tdProf = document.createElement('td');
                     tdProf.innerText = r.profitStr;
-                    if (r.num_profit > 1000) tdProf.className = 'bg-gold';
+                    
+                    let profitRatio = 0;
+                    if (maxProfit !== minProfit) {
+                        profitRatio = (r.num_profit - minProfit) / (maxProfit - minProfit);
+                    }
+
+                    // Beautiful Light Emerald Green Scale
+                    // Maps the lowest profit to a sheer 10% opacity, and the highest to a vibrant 85% opacity
+                    const emeraldOpacity = 0.10 + (profitRatio * 0.75);
+                    const profitBgColor = `rgba(16, 185, 129, ${emeraldOpacity})`;
+                    
+                    tdProf.style.backgroundColor = profitBgColor;
+                    tdProf.style.color = '#FFFFFF';
+                    tdProf.style.fontWeight = '600';
+                    
                     tr.appendChild(tdProf);
                     
                     // Complex heat map generation utilizing the pure background float and custom Blue (#3c4bab / 60, 75, 171)
