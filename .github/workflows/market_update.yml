@@ -1,26 +1,14 @@
 name: Daily At-Close Database Update
 
 on:
-  schedule:
-    # Triggers once daily at 21:30 UTC Monday-Friday
-    # (4:30 PM CDT in Summer / 3:30 PM CST in Winter)
-    - cron: '30 21 * * 1-5'
-  
-  # Keeps the manual "Run workflow" button active for testing
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   update-sheets:
     runs-on: ubuntu-latest
-    
-    # Forces the GitHub Runner to use the new Node 24 infrastructure
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
