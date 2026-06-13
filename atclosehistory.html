@@ -143,4 +143,341 @@
         th.sortable.active-sort { 
             background-color: #FFFFFF !important; 
             color: #000000 !important; 
-            border-bottom: 2px solid #FFFFFF !important
+            border-bottom: 2px solid #FFFFFF !important;
+        }
+        
+        th.sortable.active-sort:hover {
+            background-color: #F2F2F7 !important;
+        }
+
+        th.sortable.active-sort .sort-icon,
+        th.sortable .sort-icon.active { 
+            color: #000000 !important; 
+        }
+
+        /* Conditional formatting custom classes */
+        .bg-pos { background-color: #c8e6c9 !important; color: #2e7d32 !important; font-weight: 600; }
+        .bg-neg { background-color: #f4cccc !important; color: #cc0000 !important; font-weight: 600; }
+        
+        #loading { color: #8E8E93; margin-top: 50px; font-size: 1.1rem; font-weight: 600; }
+        
+        /* Custom UI Scrollbar for the table wrapper */
+        .table-container::-webkit-scrollbar { height: 8px; width: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #000000; }
+        .table-container::-webkit-scrollbar-thumb { background: #2C2C2E; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #3A3A3C; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="livecharts.html" class="nav-btn">◀ Back to Charts</a>
+        <h1>At Close History</h1>
+        <div style="position: absolute; right: 0; display: flex; flex-direction: column; align-items: flex-end;">
+            <div id="filter-status" class="filter-status" style="position: relative; right: auto;">
+                Filtering By: Upside Potential (Default)
+                <span class="filter-direction">High to Low</span>
+            </div>
+            <button id="reset-btn" class="reset-btn" onclick="resetFilters()">Reset Filters ↺</button>
+        </div>
+    </div>
+
+    <div id="loading">Connecting to Database natively...</div>
+    
+    <div class="table-container" id="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sortable" id="th-symbol" onclick="handleSort('symbol')">Stock Symbol <span class="sort-icon" id="sort-symbol">↕</span></th>
+                    <th class="sortable" id="th-price" onclick="handleSort('price')">Closing Price <span class="sort-icon" id="sort-price">↕</span></th>
+                    <th colspan="2" class="sortable" id="th-chgPct" onclick="handleSort('chgPct')" title="Sorts by Percentage Change">Change over Yesterday <span class="sort-icon" id="sort-chgPct">↕</span></th>
+                    <th class="sortable" id="th-high52" onclick="handleSort('high52')" title="Sorts by Peak Price">52 Week High <span class="sort-icon" id="sort-high52">↕</span></th>
+                    <th class="sortable" id="th-highDate" onclick="handleSort('highDate')" title="Sorts by Peak Date">Peak Date <span class="sort-icon" id="sort-highDate">↕</span></th>
+                    <th class="sortable" id="th-cost" onclick="handleSort('cost')">Cost of 25 shares <span class="sort-icon" id="sort-cost">↕</span></th>
+                    <th class="sortable" id="th-profit" onclick="handleSort('profit')">Expected Profit <span class="sort-icon" id="sort-profit">↕</span></th>
+                    <th class="sortable active-sort" id="th-upside" onclick="handleSort('upside')">Upside Potential <span class="sort-icon active" id="sort-upside">▼</span></th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMXRNvl_MWdY7TDj8bXruKqlFyoulqEc33XWZ1q5tY9rn2rdLSB6F-VqufSwtHup2eLvZwcBA3fX-j/pub?gid=0&single=true&output=csv";
+
+        const BRAND_COLORS = {
+            'TSLA': '#E31937', 'NVDA': '#76B900', 'AAPL': '#BFBFBF',
+            'MSFT': '#00A4EF', 'AMZN': '#FF9900', 'GOOG': '#4285F4', 'META': '#0668E1'
+        };
+        
+        const COLUMN_NAMES = {
+            'symbol': 'Stock Symbol', 'price': 'Closing Price', 'chgPct': 'Change over Yesterday',
+            'high52': '52 Week High', 'highDate': '52 Week Peak Date', 'cost': 'Cost of 25 shares',
+            'profit': 'Expected Profit', 'upside': 'Upside Potential'
+        };
+
+        let marketData = [];
+        let currentSort = { column: 'upside', direction: 'desc' }; 
+
+        function parseCSV(str) {
+            const arr = []; let quote = false; let row = [], col = '';
+            for (let c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                if (cc === '"' && quote && nc === '"') { col += cc; ++c; continue; }
+                if (cc === '"') { quote = !quote; continue; }
+                if (cc === ',' && !quote) { row.push(col); col = ''; continue; }
+                if (cc === '\r' && nc === '\n' && !quote) {
+                    row.push(col); arr.push(row); col = ''; row = []; ++c; continue;
+                }
+                if (cc === '\n' && !quote) {
+                    row.push(col); arr.push(row); col = ''; row = []; continue;
+                }
+                col += cc;
+            }
+            if (col || row.length) { row.push(col); arr.push(row); }
+            return arr;
+        }
+
+        function cleanNumeric(val) {
+            if (!val) return 0;
+            const isNegative = val.includes('-') || val.includes('↓');
+            const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+            if (isNaN(num)) return 0;
+            return isNegative ? -num : num;
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch(CSV_URL + "&_t=" + Date.now());
+                const text = await res.text();
+                const rows = parseCSV(text);
+                
+                let parsedData = [];
+                let currentGroup = null;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.length < 10) continue; 
+                    
+                    const dateVal = row[0] ? row[0].replace(/^'/, '').trim() : "";
+                    const symbol = row[1] ? row[1].replace(/^'/, '').trim() : "";
+                    
+                    if (!dateVal && !symbol) continue; 
+
+                    if (dateVal && !symbol) {
+                        currentGroup = { date: dateVal, rows: [] };
+                        parsedData.push(currentGroup);
+                        continue;
+                    }
+
+                    if (symbol && currentGroup) {
+                        currentGroup.rows.push({
+                            symbol: symbol,
+                            priceStr: row[2] ? row[2].replace(/^'/, '').trim() : "",
+                            num_price: cleanNumeric(row[2]),
+                            pctStr: row[3] ? row[3].replace(/^'/, '').trim() : "",
+                            num_chgPct: cleanNumeric(row[3]),
+                            dolStr: row[4] ? row[4].replace(/^'/, '').trim() : "",
+                            num_chgDol: cleanNumeric(row[4]),
+                            high52Str: row[5] ? row[5].replace(/^'/, '').trim() : "",
+                            num_high52: cleanNumeric(row[5]),
+                            highDateStr: row[6] ? row[6].replace(/^'/, '').trim() : "",
+                            num_highDate: row[6] ? new Date(row[6].replace(/^'/, '').trim()).getTime() : 0,
+                            costStr: row[7] ? row[7].replace(/^'/, '').trim() : "",
+                            num_cost: cleanNumeric(row[7]),
+                            profitStr: row[8] ? row[8].replace(/^'/, '').trim() : "",
+                            num_profit: cleanNumeric(row[8]),
+                            upsideStr: row[9] ? row[9].replace(/^'/, '').trim() : "",
+                            num_upside: cleanNumeric(row[9])
+                        });
+                    }
+                }
+                
+                marketData = parsedData;
+                applySort();
+                updateSortUI();
+                renderTable();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('table-container').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerText = "Failed to load database. Please try refreshing.";
+            }
+        }
+
+        function handleSort(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = column === 'symbol' ? 'asc' : 'desc';
+            }
+            applySort();
+            updateSortUI();
+            renderTable();
+        }
+
+        function applySort() {
+            if (!currentSort.column) return;
+            marketData.forEach(group => {
+                group.rows.sort((a, b) => {
+                    let valA, valB;
+                    if (currentSort.column === 'symbol') {
+                        valA = a.symbol; valB = b.symbol;
+                        return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    } else {
+                        valA = a['num_' + currentSort.column];
+                        valB = b['num_' + currentSort.column];
+                        return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                    }
+                });
+            });
+        }
+
+        function updateSortUI() {
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.innerHTML = '↕'; icon.classList.remove('active');
+            });
+            document.querySelectorAll('.sortable').forEach(th => th.classList.remove('active-sort'));
+            
+            if (currentSort.column) {
+                const activeIcon = document.getElementById(`sort-${currentSort.column}`);
+                const activeTh = document.getElementById(`th-${currentSort.column}`);
+                if (activeIcon && activeTh) {
+                    activeIcon.innerHTML = currentSort.direction === 'desc' ? '▼' : '▲';
+                    activeIcon.classList.add('active');
+                    activeTh.classList.add('active-sort');
+                }
+            }
+            
+            const statusEl = document.getElementById('filter-status');
+            let dirText = currentSort.direction === 'desc' ? 'High to Low' : 'Low to High';
+            
+            if (currentSort.column === 'symbol') {
+                dirText = currentSort.direction === 'desc' ? 'Z to A' : 'A to Z';
+            } else if (currentSort.column === 'chgPct') {
+                dirText = currentSort.direction === 'desc' ? 'Top Gainers to Top Losers' : 'Top Losers to Top Gainers';
+            } else if (currentSort.column === 'highDate') {
+                dirText = currentSort.direction === 'desc' ? 'Latest to Oldest' : 'Oldest to Latest';
+            }
+
+            const resetBtn = document.getElementById('reset-btn');
+            if (currentSort.column === 'upside' && currentSort.direction === 'desc') {
+                statusEl.innerHTML = `Filtering By: Upside Potential (Default)<br><span class="filter-direction">${dirText}</span>`;
+                resetBtn.style.display = 'none';
+            } else {
+                statusEl.innerHTML = `Filtering By: ${COLUMN_NAMES[currentSort.column]}<br><span class="filter-direction">${dirText}</span>`;
+                resetBtn.style.display = 'inline-block';
+            }
+        }
+
+        function resetFilters() {
+            currentSort = { column: 'upside', direction: 'desc' };
+            applySort(); updateSortUI(); renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            const allProfitValues = [];
+            marketData.forEach(group => {
+                group.rows.forEach(row => allProfitValues.push(row.num_profit));
+            });
+            const maxProfit = Math.max(...allProfitValues);
+            const minProfit = Math.min(...allProfitValues);
+            
+            marketData.forEach(group => {
+                let trDate = document.createElement('tr');
+                let tdDate = document.createElement('td');
+                
+                let dateObj = new Date(group.date);
+                let dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                
+                tdDate.innerText = `${dayName}, ${group.date}`;
+                tdDate.colSpan = "9";
+                tdDate.style.fontWeight = '700';
+                tdDate.style.fontSize = '1.15rem';
+                tdDate.style.letterSpacing = '0.02em';
+                tdDate.style.lineHeight = '2.8rem';
+                tdDate.style.backgroundColor = '#1C1C1E';
+                tdDate.style.borderRight = 'none';
+                
+                trDate.appendChild(tdDate);
+                tbody.appendChild(trDate);
+                
+                group.rows.forEach(r => {
+                    let tr = document.createElement('tr');
+                    
+                    let tdSym = document.createElement('td');
+                    tdSym.innerText = r.symbol;
+                    tdSym.style.color = BRAND_COLORS[r.symbol] || '#FFFFFF';
+                    tr.appendChild(tdSym);
+                    
+                    let tdPrice = document.createElement('td');
+                    tdPrice.innerText = r.priceStr;
+                    tr.appendChild(tdPrice);
+                    
+                    let tdPct = document.createElement('td');
+                    tdPct.innerText = r.pctStr;
+                    if (r.pctStr.includes('↑') || r.pctStr.includes('+')) tdPct.className = 'bg-pos';
+                    else if (r.pctStr.includes('↓') || r.pctStr.includes('-')) tdPct.className = 'bg-neg';
+                    tr.appendChild(tdPct);
+                    
+                    let tdDol = document.createElement('td');
+                    tdDol.innerText = r.dolStr;
+                    if (r.dolStr.includes('↑') || r.dolStr.includes('+')) tdDol.className = 'bg-pos';
+                    else if (r.dolStr.includes('↓') || r.dolStr.includes('-')) tdDol.className = 'bg-neg';
+                    tr.appendChild(tdDol);
+                    
+                    let tdH52 = document.createElement('td');
+                    tdH52.innerText = r.high52Str;
+                    tr.appendChild(tdH52);
+                    
+                    let tdHD = document.createElement('td');
+                    tdHD.innerText = r.highDateStr;
+                    tr.appendChild(tdHD);
+                    
+                    let tdCost = document.createElement('td');
+                    tdCost.innerText = r.costStr;
+                    tr.appendChild(tdCost);
+                    
+                    let tdProf = document.createElement('td');
+                    tdProf.innerText = r.profitStr;
+                    
+                    let profitRatio = 0;
+                    if (maxProfit !== minProfit) {
+                        profitRatio = (r.num_profit - minProfit) / (maxProfit - minProfit);
+                    }
+
+                    const emeraldOpacity = 0.10 + (profitRatio * 0.75);
+                    const profitBgColor = `rgba(16, 185, 129, ${emeraldOpacity})`;
+                    
+                    tdProf.style.backgroundColor = profitBgColor;
+                    tdProf.style.color = '#FFFFFF';
+                    tdProf.style.fontWeight = '600';
+                    tr.appendChild(tdProf);
+                    
+                    let tdUp = document.createElement('td');
+                    tdUp.innerText = r.upsideStr;
+                    if (r.num_upside > 0) {
+                        let opacity = Math.min(r.num_upside / 30, 1);
+                        tdUp.style.backgroundColor = `rgba(60, 75, 171, ${opacity})`;
+                        tdUp.style.color = '#FFFFFF';
+                        tdUp.style.fontWeight = '600';
+                    }
+                    tr.appendChild(tdUp);
+                    
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+        
+        loadData();
+        setInterval(loadData, 60000);
+    </script>
+</body>
+</html>
